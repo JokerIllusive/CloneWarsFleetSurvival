@@ -278,6 +278,7 @@ namespace FleetSurvival.Editor
         public static void Build()
         {
             EnsureResources();
+            ConfigureAudioImports();
             PrepareSuppliedModel();
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             new GameObject("Fleet Survival",typeof(FleetGame));
@@ -296,10 +297,23 @@ namespace FleetSurvival.Editor
         }
         public static void BuildAndPreview()
         { Build(); PreviewForwardDirections(); PreviewAudio(); }
+        static void ConfigureAudioImports()
+        {
+            foreach(var guid in AssetDatabase.FindAssets("t:AudioClip",new[]{"Assets/FleetSurvival/Resources/Audio"}))
+            {
+                var importer=(AudioImporter)AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid));
+                importer.forceToMono=true; importer.loadInBackground=false;
+                var settings=importer.defaultSampleSettings;
+                settings.preloadAudioData=true;
+                settings.loadType=AudioClipLoadType.DecompressOnLoad; settings.compressionFormat=AudioCompressionFormat.PCM;
+                settings.sampleRateSetting=AudioSampleRateSetting.OverrideSampleRate; settings.sampleRateOverride=44100;
+                importer.defaultSampleSettings=settings; importer.SaveAndReimport();
+            }
+        }
         public static void PreviewAudio()
         {
             var samples=new System.Collections.Generic.List<float>();
-            foreach(var name in new[]{"RepublicHeavy","CISHeavy","RepublicFighter","CISFighter","HyperspaceCharge","HyperspaceExit","Explosion"})
+            foreach(var name in new[]{"VenatorCannon01","MunificentCannon01","ARC170Cannon01","VultureCannon01","VWingCannon01","HyperspaceCharge","HyperspaceExit","Explosion"})
             {
                 var clip=FleetSound.Get(name); var data=new float[clip.samples]; clip.GetData(data,0);
                 samples.AddRange(data); samples.AddRange(new float[22050]);

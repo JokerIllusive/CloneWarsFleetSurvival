@@ -8,6 +8,7 @@ namespace FleetSurvival
         public readonly Vector3 Destination;
         public FleetShip Ship { get; private set; }
         public float Elapsed { get; private set; }
+        public Vector3 ReservedPosition => Ship!=null?landing:Destination;
         readonly FleetGame game;
         readonly LineRenderer beacon;
         LineRenderer wake;

@@ -55,6 +55,11 @@ namespace FleetSurvival
         {
             foreach(var section in sections) if(section!=null && section.gameObject.activeSelf) { SpawnFragment(section); section.gameObject.SetActive(false); }
         }
+        public void BreakModel(Transform model)
+        {
+            foreach(var section in model.GetComponentsInChildren<HullSection>())
+                if(section.gameObject.activeSelf) { SpawnFragment(section); section.gameObject.SetActive(false); }
+        }
         void SpawnFragment(HullSection section)
         {
             var filter=section.GetComponent<MeshFilter>(); var renderer=section.GetComponent<MeshRenderer>();

@@ -1,5 +1,21 @@
 # Asset credits
 
+## User-supplied audio recordings
+
+The user supplied `Venator.wav`, `Munificent Class.wav`, `ARC-170.wav`,
+`Vulture Droid.wav`, `V-Wing.wav`, and `Hyperspace.wav` for use in this prototype.
+Short effects were extracted, converted to mono 44.1 kHz PCM, normalized, and
+given edge fades. The hyperspace charge was reversed and fitted to its 2.2-second
+countdown; the exit uses a separate excerpt. V-Wing firing audio is temporarily
+used by the V-19 interceptor at the user's request.
+
+Original recording creators and license details were not provided. Source
+filenames, hashes, and extract timestamps are recorded in
+`Assets/FleetSurvival/Resources/Audio/Sources.json`. Other weapon profiles and
+explosions use original synthesized audio created for this prototype.
+
+## Ship models
+
 **Star Wars: The Clone Wars Munificent (S7 Style)** by
 [lolqeeeeeeeeee](https://sketchfab.com/lolqeeeeeeeeee).
 

@@ -4,13 +4,30 @@ using UnityEngine;
 
 namespace FleetSurvival
 {
-    // Original synthesized effects; no audio is copied from episodes or other games.
+    // Synthesized fallbacks and edited effects from the user's supplied recordings.
     public static class FleetSound
     {
         static readonly Dictionary<string,AudioClip> clips=new Dictionary<string,AudioClip>();
+        public static bool UsesSuppliedCannon(Faction faction,ShipClass kind) => faction==Faction.Republic?(kind==ShipClass.Flagship || kind==ShipClass.Destroyer || kind==ShipClass.Carrier):(kind==ShipClass.Frigate || kind==ShipClass.Escort);
+        public static AudioClip Weapon(Faction faction,ShipClass kind)
+        {
+            string prefix=null;
+            if(UsesSuppliedCannon(faction,kind)) prefix=faction==Faction.Republic?"Venator":"Munificent";
+            else if(kind==ShipClass.Fighter || kind==ShipClass.Interceptor) prefix=faction==Faction.CIS?"Vulture":kind==ShipClass.Fighter?"ARC170":"VWing";
+            if(prefix!=null)
+            {
+                string name=prefix+"Cannon0"+UnityEngine.Random.Range(1,3);
+                var supplied=Resources.Load<AudioClip>("Audio/"+name);
+                if(supplied!=null) return supplied;
+            }
+            bool fighter=kind==ShipClass.Fighter || kind==ShipClass.Interceptor;
+            return Get((faction==Faction.Republic?"Republic":"CIS")+(fighter?"Fighter":"Heavy"));
+        }
         public static AudioClip Get(string name)
         {
             if(clips.TryGetValue(name,out var ready)) return ready;
+            var supplied=Resources.Load<AudioClip>("Audio/"+name);
+            if(supplied!=null) { clips[name]=supplied; return supplied; }
             bool heavy=name.Contains("Heavy"),cis=name.Contains("CIS"),jump=name.Contains("Hyperspace"),explosion=name=="Explosion";
             float duration=explosion?1.3f:jump?1.1f:heavy?.36f:.19f;
             int rate=44100,count=(int)(rate*duration); var samples=new float[count];

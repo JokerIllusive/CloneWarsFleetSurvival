@@ -86,6 +86,18 @@ namespace FleetSurvival
 
         public static void Build(Transform root, Faction faction, ShipClass kind)
         {
+            if(kind!=ShipClass.Fighter && kind!=ShipClass.Interceptor) { BuildSingle(root,faction,kind); return; }
+            var group=new GameObject("Six-fighter squadron").transform; group.SetParent(root,false);
+            foreach(var offset in FleetSquadron.Offsets)
+            {
+                var craft=new GameObject("Squadron fighter").transform; craft.SetParent(group,false);
+                craft.localPosition=offset; craft.localScale=Vector3.one*FleetSquadron.CraftScale;
+                BuildSingle(craft,faction,kind);
+            }
+        }
+
+        static void BuildSingle(Transform root, Faction faction, ShipClass kind)
+        {
             string assetName = faction==Faction.Republic
                 ? (kind==ShipClass.Flagship || kind==ShipClass.Destroyer || kind==ShipClass.Carrier ? "VenatorDetailed" : kind==ShipClass.Frigate ? "Acclamator" : kind==ShipClass.Escort ? "Arquitens" : kind==ShipClass.Interceptor ? "V19Torrent" : "ARC170")
                 : (kind==ShipClass.Flagship ? "Providence" : kind==ShipClass.Frigate || kind==ShipClass.Escort ? "Munificent" : kind==ShipClass.Destroyer ? "Recusant" : kind==ShipClass.Carrier ? "Lucrehulk" : "Vulture");

@@ -48,7 +48,6 @@ namespace FleetSurvival
         AudioSource audioSource;
         AudioClip explosionClip, waveClip;
         readonly List<AudioSource> soundVoices=new List<AudioSource>();
-        readonly Dictionary<FleetShip,float> lastWeaponSound=new Dictionary<FleetShip,float>();
         int nextVoice;
         bool muted;
 
@@ -179,7 +178,7 @@ namespace FleetSurvival
             foreach(var b in Bolts) if(b!=null) Destroy(b.gameObject);
             Ships.Clear(); Bolts.Clear();
             formations.Clear();
-            foreach(var voice in soundVoices) voice.Stop(); lastWeaponSound.Clear();
+            foreach(var voice in soundVoices) voice.Stop();
             foreach(Transform effect in effectsRoot) Destroy(effect.gameObject);
             gesture=false; IsDragging=false; AttackMoveMode=false;
         }
@@ -203,24 +202,35 @@ namespace FleetSurvival
             Vector3 position=FindReinforcementPosition(origin,kind);
             return RecruitAt(kind,position);
         }
-        public bool CanCallIn(ShipClass kind) => (Phase==BattlePhase.Preparation || Phase==BattlePhase.Combat) && !Paused && kind!=ShipClass.Flagship && FleetCapacityUsed<FleetRules.FleetLimit && Salvage>=FleetRules.Stats(PlayerFaction,kind).Cost;
+        public int CallInCount(ShipClass kind) => PlayerFaction==Faction.Republic && kind==ShipClass.Escort?2:1;
+        public int CallInCost(ShipClass kind) => FleetRules.Stats(PlayerFaction,kind).Cost*CallInCount(kind);
+        public string CallInName(ShipClass kind) => CallInCount(kind)==2?"Arquitens cruiser pair":FleetRules.Stats(PlayerFaction,kind).Name+(kind==ShipClass.Fighter || kind==ShipClass.Interceptor?" (6)":"");
+        Vector3[] CallInPositions(ShipClass kind,Vector3 center)
+        {
+            center.y=0;
+            float spacing=FleetRules.Stats(PlayerFaction,kind).Radius+1;
+            return CallInCount(kind)==2?new[]{center-Vector3.right*spacing,center+Vector3.right*spacing}:new[]{center};
+        }
+        bool IsCallInClear(ShipClass kind,Vector3 center) => CallInPositions(kind,center).All(p=>IsArrivalClear(kind,p,null));
+        public bool CanCallIn(ShipClass kind) => (Phase==BattlePhase.Preparation || Phase==BattlePhase.Combat) && !Paused && kind!=ShipClass.Flagship && FleetCapacityUsed+CallInCount(kind)<=FleetRules.FleetLimit && Salvage>=CallInCost(kind);
         public bool BeginReinforcementPlacement(ShipClass kind)
         {
             if(!CanCallIn(kind)) { Notify("Call-in unavailable: check salvage, fleet capacity, and pause."); return false; }
             CancelReinforcementPlacement(); SelectedReinforcement=kind;
             placementGhost=new GameObject("Reinforcement hologram"); AddCombatEffect(placementGhost);
-            ShipVisuals.Build(placementGhost.transform,PlayerFaction,kind);
+            foreach(var offset in CallInPositions(kind,Vector3.zero))
+            { var preview=new GameObject("Arrival preview").transform; preview.SetParent(placementGhost.transform,false); preview.localPosition=offset; ShipVisuals.Build(preview,PlayerFaction,kind); }
             foreach(var renderer in placementGhost.GetComponentsInChildren<MeshRenderer>())
             { var materials=renderer.sharedMaterials; for(int i=0;i<materials.Length;i++) materials[i]=Resources.Load<Material>("FleetHologram"); renderer.sharedMaterials=materials; }
             UpdateReinforcementPreview(FindReinforcementPosition(Flagship!=null?Flagship.transform.position:Vector3.zero,kind));
-            Notify("CALL IN "+FleetRules.Stats(PlayerFaction,kind).Name+": left-click a clear arrival point. Right-click / Esc cancels."); return true;
+            Notify("CALL IN "+CallInName(kind)+": left-click a clear arrival point. Right-click / Esc cancels."); return true;
         }
         public void UpdateReinforcementPreview(Vector3 position)
         {
             if(placementGhost==null || !SelectedReinforcement.HasValue) return;
             position.y=0; placementGhost.transform.position=position;
             var material=Resources.Load<Material>("FleetHologram");
-            material.color=IsArrivalClear(SelectedReinforcement.Value,position,null)?new Color(.1f,.7f,1,.2f):new Color(1,.15f,.05f,.26f);
+            material.color=IsCallInClear(SelectedReinforcement.Value,position)?new Color(.1f,.7f,1,.2f):new Color(1,.15f,.05f,.26f);
         }
         public void CancelReinforcementPlacement()
         {
@@ -237,9 +247,9 @@ namespace FleetSurvival
         {
             if(!CanCallIn(kind)) { Notify("Call-in unavailable: check salvage, fleet capacity, and pause."); return false; }
             position.y=0;
-            if(!IsArrivalClear(kind,position,null)) { Notify("Arrival blocked. Choose clear space inside the sector."); return false; }
-            Salvage-=FleetRules.Stats(PlayerFaction,kind).Cost;
-            jumps.Add(new FleetJump(this,kind,position));
+            if(!IsCallInClear(kind,position)) { Notify("Arrival blocked. Choose clear space inside the sector."); return false; }
+            Salvage-=CallInCost(kind);
+            foreach(var arrival in CallInPositions(kind,position)) jumps.Add(new FleetJump(this,kind,arrival));
             Notify("Hyperspace coordinates transmitted. Reinforcement inbound (3 seconds)."); return true;
         }
         bool IsArrivalClear(ShipClass kind,Vector3 position,FleetJump ignore)
@@ -247,7 +257,7 @@ namespace FleetSurvival
             float radius=FleetRules.Stats(PlayerFaction,kind).Radius;
             if(position.magnitude>FleetRules.ArenaRadius-radius-1) return false;
             if(Ships.Any(s=>s!=null && s.Alive && !s.IsArriving && Vector3.Distance(s.transform.position,position)<s.Stats.Radius+radius+1)) return false;
-            return !jumps.Any(j=>j!=ignore && Vector3.Distance(j.Destination,position)<FleetRules.Stats(PlayerFaction,j.Kind).Radius+radius+1);
+            return !jumps.Any(j=>j!=ignore && Vector3.Distance(j.ReservedPosition,position)<FleetRules.Stats(PlayerFaction,j.Kind).Radius+radius+1);
         }
         public bool ResolveArrivalPosition(ShipClass kind,Vector3 requested,FleetJump ignore,out Vector3 result)
         {
@@ -270,7 +280,7 @@ namespace FleetSurvival
                 float a=i*Mathf.PI/6;
                 Vector3 position=origin+new Vector3(Mathf.Sin(a),0,Mathf.Cos(a))*(12+ring*8);
                 if(position.magnitude>FleetRules.ArenaRadius-radius) continue;
-                if(IsArrivalClear(kind,position,null)) return position;
+                if(IsCallInClear(kind,position)) return position;
             }
             return Vector3.zero;
         }
@@ -282,7 +292,7 @@ namespace FleetSurvival
             const int cost=120;
             if(Salvage<cost) { Notify("Repairs require 120 salvage."); return false; }
             Salvage-=cost;
-            foreach(var s in Ships) if(s!=null && s.Friendly) { s.Hull=s.MaxHull; s.Shield=s.MaxShield; s.Destruction.Repair(); }
+            foreach(var s in Ships) if(s!=null && s.Friendly) { s.Hull=s.MaxHull; s.Shield=s.MaxShield; s.Destruction.Repair(); if(s.Squadron!=null) s.Squadron.Repair(); }
             Notify("Fleet hulls repaired and shields restored."); return true;
         }
 
@@ -358,7 +368,11 @@ namespace FleetSurvival
         }
 
         public void Fire(FleetShip from,FleetShip target,float damage)
-        { from.Weapons.FireVolley(target,damage); }
+        {
+            from.Weapons.FireVolley(target,damage);
+            bool fighter=from.Kind==ShipClass.Fighter || from.Kind==ShipClass.Interceptor;
+            PlayBattleSound(FleetSound.Weapon(from.Faction,from.Kind),from.transform.position,fighter?.065f:.13f);
+        }
 
         public void SpawnBolt(FleetShip from,FleetShip target,float damage,Vector3 muzzle,Color color)
         {
@@ -369,12 +383,6 @@ namespace FleetSurvival
             go.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(color,true);
             var core=GameObject.CreatePrimitive(PrimitiveType.Cube); Destroy(core.GetComponent<Collider>()); core.transform.SetParent(go.transform,false); core.transform.localScale=new Vector3(.4f,.4f,1.01f); core.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(Color.white,true);
             var bolt=go.AddComponent<FleetBolt>(); bolt.Game=this; bolt.Target=target; bolt.Damage=damage; Bolts.Add(bolt);
-            if(!lastWeaponSound.TryGetValue(from,out float last) || BattleTime-last>.075f)
-            {
-                bool heavy=from.Kind!=ShipClass.Fighter && from.Kind!=ShipClass.Interceptor;
-                PlayBattleSound(FleetSound.Get((from.Faction==Faction.Republic?"Republic":"CIS")+(heavy?"Heavy":"Fighter")),muzzle,heavy?.13f:.065f);
-                lastWeaponSound[from]=BattleTime;
-            }
         }
         public void PlayBattleSound(AudioClip clip,Vector3 position,float volume)
         {
@@ -385,6 +393,7 @@ namespace FleetSurvival
 
         public void RemoveBolt(FleetBolt bolt) { Bolts.Remove(bolt); if(bolt!=null) Destroy(bolt.gameObject); }
         public void AddCombatEffect(GameObject effect) { effect.transform.SetParent(effectsRoot,true); }
+        public void FighterLost(Vector3 position) { Burst(position,.8f); }
 
         public void ShipDestroyed(FleetShip ship)
         {
@@ -393,7 +402,6 @@ namespace FleetSurvival
             if(!ship.Friendly) { Salvage+=ship.Stats.Salvage; Kills++; }
             bool lostFlagship=ship.Friendly && ship.IsFlagship;
             Ships.Remove(ship); Destroy(ship.gameObject);
-            lastWeaponSound.Remove(ship);
             if(lostFlagship)
             {
                 CancelReinforcementPlacement(); foreach(var jump in jumps) jump.Cancel(); jumps.Clear();
@@ -562,6 +570,7 @@ namespace FleetSurvival
                 }
                 CheckMovement(assertions);
                 CheckCombatUpgrades(assertions);
+                CheckSquadronsAndAudio(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -587,6 +596,16 @@ namespace FleetSurvival
             cameraFocus=new Vector3(12,0,0); PositionCamera();
             yield return null;
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-hyperspace-preview.png"));
+            Begin(Faction.Republic); ClearBattle(); Salvage=1000;
+            Spawn(Faction.Republic,ShipClass.Flagship,true,true,new Vector3(0,0,-16));
+            var squad=Spawn(Faction.Republic,ShipClass.Fighter,true,false,new Vector3(-13,0,7)); squad.Selected=true;
+            Spawn(Faction.Republic,ShipClass.Interceptor,true,false,new Vector3(13,0,7));
+            RecruitAt(ShipClass.Escort,new Vector3(0,0,0));
+            for(int i=0;i<60;i++) Tick(.05f);
+            cameraFocus=new Vector3(0,0,0); cameraDistance=75; PositionCamera();
+            Notify("Six-fighter squadrons / two Arquitens cruisers per call-in");
+            yield return null;
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-squadron-preview.png"));
             Begin(Faction.Republic); LaunchWave();
             for(int i=0;i<300;i++) Tick(.04f);
             yield return null;
@@ -685,6 +704,43 @@ namespace FleetSurvival
             ReturnToMenu(); Check(IncomingCount==0 && !SelectedReinforcement.HasValue,"Menu clears pending reinforcements",assertions);
             var rep=FleetSound.Get("RepublicHeavy"); var cis=FleetSound.Get("CISHeavy");
             Check(rep!=cis && rep.frequency==44100 && FleetSound.Get("HyperspaceExit").length>1,"Separate original audio effects",assertions);
+        }
+        void CheckSquadronsAndAudio(List<string> assertions)
+        {
+            foreach(var faction in new[]{Faction.Republic,Faction.CIS}) foreach(var kind in new[]{ShipClass.Fighter,ShipClass.Interceptor})
+            {
+                Begin(faction); ClearBattle();
+                var squad=Spawn(faction,kind,true,false,Vector3.zero);
+                Check(squad.Squadron!=null && squad.Squadron.ActiveCount==6 && squad.VisualRoot.childCount==6,"Six separate fighter models "+faction+" "+kind,assertions);
+                var fighter=squad.VisualRoot.GetChild(0); var renderer=fighter.GetComponentInChildren<MeshRenderer>();
+                Check(fighter.localScale.x<.6f && renderer.bounds.size.magnitude<7,"Reduced fighter visual scale "+faction+" "+kind,assertions);
+                squad.Shield=0; squad.Damage(squad.MaxHull/6+.01f,fighter.position);
+                Check(squad.Squadron.ActiveCount==5 && !fighter.gameObject.activeSelf && squad.Alive,"Individual fighter loss leaves squadron alive "+faction+" "+kind,assertions);
+                var target=Spawn(faction==Faction.Republic?Faction.CIS:Faction.Republic,ShipClass.Frigate,false,false,new Vector3(0,0,20));
+                Fire(squad,target,squad.Stats.Damage*squad.Squadron.ActiveCount/6f); squad.Weapons.Tick(.5f);
+                Check(Bolts.Count==10 && Mathf.Abs(Bolts.Sum(b=>b.Damage)-squad.Stats.Damage*5/6f)<.01f,"Surviving fighters fire and retain scaled damage "+faction+" "+kind,assertions);
+                Salvage=1000; RepairFleet();
+                Check(squad.Squadron.ActiveCount==6 && fighter.gameObject.activeSelf && squad.Hull==squad.MaxHull,"Repair restores squadron strength "+faction+" "+kind,assertions);
+                var sound=FleetSound.Weapon(faction,kind);
+                string expected=faction==Faction.CIS?"VultureCannon":kind==ShipClass.Fighter?"ARC170Cannon":"VWingCannon";
+                Check(sound.name.StartsWith(expected) && sound.channels==1 && sound.frequency==44100,"Supplied fighter firing sound "+faction+" "+kind,assertions);
+            }
+            Begin(Faction.Republic); Salvage=1000;
+            Check(CallInCount(ShipClass.Escort)==2 && CallInCost(ShipClass.Escort)==280,"Arquitens pair has two-cruiser cost",assertions);
+            Check(RecruitAt(ShipClass.Escort,new Vector3(0,0,32)) && Salvage==720 && IncomingCount==2 && FleetCapacityUsed==7,"Arquitens call-in reserves two cruisers atomically",assertions);
+            for(int i=0;i<60;i++) Tick(.05f);
+            var cruisers=Ships.Where(s=>s.Kind==ShipClass.Escort && s.Friendly).ToArray();
+            Check(cruisers.Length==2 && cruisers.All(s=>!s.IsArriving) && Vector3.Distance(cruisers[0].transform.position,cruisers[1].transform.position)>6,"Arquitens pair arrives at separated points",assertions);
+            Begin(Faction.Republic); Salvage=1000;
+            int original=Salvage;
+            Spawn(Faction.Republic,ShipClass.Escort,true,false,new Vector3(3.6f,0,32));
+            Check(!RecruitAt(ShipClass.Escort,new Vector3(0,0,32)) && Salvage==original && IncomingCount==0,"Partly blocked pair spends no salvage",assertions);
+            while(FriendlyCount<21) Spawn(Faction.Republic,ShipClass.Frigate,true,false,new Vector3(55,0,-40));
+            Check(!CanCallIn(ShipClass.Escort) && IncomingCount==0,"Arquitens pair needs two free fleet slots",assertions);
+            Begin(Faction.CIS); Salvage=1000;
+            Check(CallInCount(ShipClass.Escort)==1 && CallInCost(ShipClass.Escort)==125,"Munificent escort retains single-ship call-in",assertions);
+            Check(FleetSound.Weapon(Faction.Republic,ShipClass.Flagship).name.StartsWith("VenatorCannon") && FleetSound.Weapon(Faction.CIS,ShipClass.Frigate).name.StartsWith("MunificentCannon"),"Supplied capital cannon sounds are mapped to hulls",assertions);
+            Check(FleetSound.Get("HyperspaceCharge")==Resources.Load<AudioClip>("Audio/HyperspaceCharge") && Mathf.Abs(FleetSound.Get("HyperspaceCharge").length-2.2f)<.01f && FleetSound.Get("HyperspaceExit")==Resources.Load<AudioClip>("Audio/HyperspaceExit"),"Edited recording supplies separate hyperspace stages",assertions);
         }
         static void Check(bool condition,string name,List<string> checks) { if(!condition) throw new Exception("Smoke test failed: "+name); checks.Add(name); }
         [Serializable] public sealed class SmokeReport { public bool passed; public string error; public string[] checks; }

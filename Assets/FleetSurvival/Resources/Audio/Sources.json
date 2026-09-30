@@ -1,0 +1,134 @@
+[
+  {
+    "clip": "VenatorCannon01.wav",
+    "source": "Venator.wav",
+    "sourceSHA256": "6a96d323204b65c4bba4fd49165dc5914742779db02ca0af9c27552b71c28391",
+    "startSeconds": 2.88,
+    "endSeconds": 4.35,
+    "duration": 1.4699773242630385,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "VenatorCannon02.wav",
+    "source": "Venator.wav",
+    "sourceSHA256": "6a96d323204b65c4bba4fd49165dc5914742779db02ca0af9c27552b71c28391",
+    "startSeconds": 6.53,
+    "endSeconds": 8.25,
+    "duration": 1.72,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "MunificentCannon01.wav",
+    "source": "Munificent Class.wav",
+    "sourceSHA256": "37af3eb4b904755b04dba0e11d0d0f719efad404cc264b1744defe75ecb99292",
+    "startSeconds": 44.48,
+    "endSeconds": 45.75,
+    "duration": 1.27,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "MunificentCannon02.wav",
+    "source": "Munificent Class.wav",
+    "sourceSHA256": "37af3eb4b904755b04dba0e11d0d0f719efad404cc264b1744defe75ecb99292",
+    "startSeconds": 46.53,
+    "endSeconds": 47.5,
+    "duration": 0.97,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "ARC170Cannon01.wav",
+    "source": "ARC-170.wav",
+    "sourceSHA256": "471a22c01741c2ae0e455075f0b4bb01c5d3a69b0dbc0122aa5a9f64c1328064",
+    "startSeconds": 33.63,
+    "endSeconds": 34.35,
+    "duration": 0.72,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "ARC170Cannon02.wav",
+    "source": "ARC-170.wav",
+    "sourceSHA256": "471a22c01741c2ae0e455075f0b4bb01c5d3a69b0dbc0122aa5a9f64c1328064",
+    "startSeconds": 35.83,
+    "endSeconds": 36.43,
+    "duration": 0.6,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "VultureCannon01.wav",
+    "source": "Vulture Droid.wav",
+    "sourceSHA256": "2d37a669d33bbaf4fd1bbc8f08bb994d6be5d654001908d621ca87060a43efd8",
+    "startSeconds": 17.08,
+    "endSeconds": 18.0,
+    "duration": 0.92,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "VultureCannon02.wav",
+    "source": "Vulture Droid.wav",
+    "sourceSHA256": "2d37a669d33bbaf4fd1bbc8f08bb994d6be5d654001908d621ca87060a43efd8",
+    "startSeconds": 19.83,
+    "endSeconds": 20.45,
+    "duration": 0.62,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "VWingCannon01.wav",
+    "source": "V-Wing.wav",
+    "sourceSHA256": "9a4e8e4daff59dd83190901f4b6bad825d5a7b15553df29c988e51074c1e5b70",
+    "startSeconds": 18.53,
+    "endSeconds": 20.4,
+    "duration": 1.8699773242630386,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "VWingCannon02.wav",
+    "source": "V-Wing.wav",
+    "sourceSHA256": "9a4e8e4daff59dd83190901f4b6bad825d5a7b15553df29c988e51074c1e5b70",
+    "startSeconds": 22.18,
+    "endSeconds": 23.9,
+    "duration": 1.72,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "HyperspaceCharge.wav",
+    "source": "Hyperspace.wav",
+    "sourceSHA256": "26ea2cb23ce01671de4bee178e46146cc71b1882cc9286cc1b27742a9c8c9350",
+    "startSeconds": 63.68,
+    "endSeconds": 65.45,
+    "duration": 2.2,
+    "reversed": true,
+    "rate": 44100,
+    "peak": 0.85
+  },
+  {
+    "clip": "HyperspaceExit.wav",
+    "source": "Hyperspace.wav",
+    "sourceSHA256": "26ea2cb23ce01671de4bee178e46146cc71b1882cc9286cc1b27742a9c8c9350",
+    "startSeconds": 39.28,
+    "endSeconds": 41.18,
+    "duration": 1.9,
+    "reversed": false,
+    "rate": 44100,
+    "peak": 0.85
+  }
+]

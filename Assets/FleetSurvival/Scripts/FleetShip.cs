@@ -19,6 +19,7 @@ namespace FleetSurvival
         public bool IsArriving { get; set; }
         public FleetWeapons Weapons { get; private set; }
         public Transform VisualRoot { get; private set; }
+        public FleetSquadron Squadron { get; private set; }
         float cooldown, lastHit = -100;
         public bool Alive => Hull > 0;
 
@@ -31,6 +32,7 @@ namespace FleetSurvival
             ShipVisuals.Build(transform,faction,kind);
             VisualRoot=transform.GetChild(0);
             Destruction=gameObject.AddComponent<ShipDestruction>(); Destruction.Initialize(this);
+            if(kind==ShipClass.Fighter || kind==ShipClass.Interceptor) Squadron=new FleetSquadron(this);
             Weapons=gameObject.AddComponent<FleetWeapons>(); Weapons.Initialize(this);
             var collider=gameObject.AddComponent<SphereCollider>(); collider.radius=Stats.Radius;
             SelectionRing=ShipVisuals.Ring(transform,Stats.Radius+1,FleetRules.Color(faction),.1f);
@@ -74,7 +76,7 @@ namespace FleetSurvival
             FlyTowards(desired,move,dt);
             if(inRange && cooldown<=0 && Game.Phase==BattlePhase.Combat)
             {
-                Game.Fire(this,target,Stats.Damage*Destruction.Firepower); cooldown=Stats.Interval;
+                Game.Fire(this,target,Stats.Damage*Destruction.Firepower*(Squadron!=null?Squadron.ActiveCount/6f:1)); cooldown=Stats.Interval;
             }
         }
 
@@ -118,7 +120,7 @@ namespace FleetSurvival
             if(!Alive || IsArriving) return;
             lastHit=Game.BattleTime;
             float absorbed=Mathf.Min(Shield,amount); Shield-=absorbed; Hull-=amount-absorbed;
-            if(amount>absorbed) Destruction.HullHit(impact);
+            if(amount>absorbed) { if(Squadron!=null) Squadron.HullHit(amount-absorbed,impact); else Destruction.HullHit(impact); }
             if(Hull<=0) { Hull=0; Game.ShipDestroyed(this); }
         }
 

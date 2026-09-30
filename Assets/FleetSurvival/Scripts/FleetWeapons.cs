@@ -5,7 +5,7 @@ namespace FleetSurvival
 {
     public sealed class FleetWeapons : MonoBehaviour
     {
-        struct Shot { public Vector3 Origin; public float Delay,Damage; public FleetShip Target; }
+        struct Shot { public Vector3 Origin; public float Delay,Damage; public FleetShip Target; public int Fighter; }
         readonly List<Shot> queued=new List<Shot>();
         readonly List<Vector3> mounts=new List<Vector3>();
         FleetShip ship;
@@ -17,7 +17,8 @@ namespace FleetSurvival
             if(ship.Kind==ShipClass.Fighter || ship.Kind==ShipClass.Interceptor)
             {
                 float wing=ship.Faction==Faction.Republic && ship.Kind==ShipClass.Fighter?1.65f:.8f;
-                mounts.Add(new Vector3(-wing,.45f,.7f)); mounts.Add(new Vector3(wing,.45f,.7f));
+                foreach(var offset in FleetSquadron.Offsets)
+                { mounts.Add(offset+new Vector3(-wing,.45f,.7f)*FleetSquadron.CraftScale); mounts.Add(offset+new Vector3(wing,.45f,.7f)*FleetSquadron.CraftScale); }
                 return;
             }
             if(ship.Faction==Faction.CIS && ship.Kind==ShipClass.Carrier)
@@ -38,7 +39,10 @@ namespace FleetSurvival
         public void FireVolley(FleetShip target,float damage)
         {
             if(target==null || !target.Alive || target.IsArriving || queued.Count>0) return;
-            for(int i=0;i<mounts.Count;i++) queued.Add(new Shot{Origin=mounts[i],Delay=i*.018f,Damage=damage/mounts.Count,Target=target});
+            int barrels=ship.Squadron!=null?ship.Squadron.ActiveCount*2:mounts.Count;
+            if(barrels==0) return;
+            for(int i=0;i<mounts.Count;i++)
+                if(ship.Squadron==null || ship.Squadron.IsActive(i/2)) queued.Add(new Shot{Origin=mounts[i],Delay=i*.018f,Damage=damage/barrels,Target=target,Fighter=i/2});
         }
         public void Tick(float dt)
         {
@@ -48,6 +52,7 @@ namespace FleetSurvival
                 if(shot.Delay>0) { queued[i]=shot; continue; }
                 queued.RemoveAt(i);
                 if(shot.Target==null || !shot.Target.Alive || shot.Target.IsArriving) continue;
+                if(ship.Squadron!=null && !ship.Squadron.IsActive(shot.Fighter)) continue;
                 ship.Game.SpawnBolt(ship,shot.Target,shot.Damage,transform.TransformPoint(shot.Origin),BoltColor);
             }
         }

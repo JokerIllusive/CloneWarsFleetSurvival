@@ -62,10 +62,10 @@ namespace FleetSurvival
                     Shield = republic ? 700 : 900, Speed = 4, Range = 32, Damage = 38, Interval = 1.5f, Radius = 6.2f, Cost = republic ? 650 : 600, Salvage = 220 };
             if (kind == ShipClass.Interceptor)
                 return new ShipStats { Name = republic ? "V-19 Torrent squadron" : "Vulture interceptor wing", Hull = republic ? 100 : 85,
-                    Shield = 45, Speed = republic ? 24 : 27, Range = 15, Damage = 9, Interval = .48f, Radius = 1.3f, Cost = republic ? 65 : 50, Salvage = 25 };
+                    Shield = 45, Speed = republic ? 24 : 27, Range = 15, Damage = 9, Interval = .48f, Radius = 6, Cost = republic ? 65 : 50, Salvage = 25 };
             return new ShipStats { Name = republic ? "ARC-170 squadron" : "Vulture squadron", Hull = republic ? 145 : 115,
                 Shield = republic ? 80 : 50, Speed = republic ? 18 : 23, Range = 17, Damage = republic ? 12 : 10,
-                Interval = republic ? .65f : .48f, Radius = 1.5f, Cost = republic ? 85 : 65, Salvage = 30 };
+                Interval = republic ? .65f : .48f, Radius = 6, Cost = republic ? 85 : 65, Salvage = 30 };
         }
 
         public static int WaveBudget(int wave) => 2 + wave * 2 + wave / 3;

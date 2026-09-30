@@ -154,7 +154,7 @@ namespace FleetSurvival
             paused.SetActive(game.Paused); defeat.SetActive(game.Phase==BattlePhase.Defeat); credits.SetActive(false);
             best.text="BEST SURVIVAL: "+game.BestWave+" WAVES";
             endReport.text="Waves survived: "+Mathf.Max(0,game.Wave-1)+"\nEnemy ships destroyed: "+game.Kills+"\nBest survival: "+game.BestWave+" waves";
-            foreach(var pair in buyButtons) { var stats=FleetRules.Stats(game.PlayerFaction,pair.Key); pair.Value.GetComponentInChildren<TextMeshProUGUI>().text=stats.Name+"\n"+stats.Cost+" salvage"; }
+            foreach(var pair in buyButtons) pair.Value.GetComponentInChildren<TextMeshProUGUI>().text=game.CallInName(pair.Key)+"\n"+game.CallInCost(pair.Key)+" salvage";
             RefreshText();
         }
         public void SetMute(bool value) { muteLabel.text=value?"SOUND OFF":"SOUND ON"; }
@@ -185,7 +185,7 @@ namespace FleetSurvival
             var ship=game.Flagship;
             if(ship!=null) { flagStatus.text=ship.Stats.Name+"\n"+Mathf.CeilToInt(ship.Hull)+" hull / "+Mathf.CeilToInt(ship.Shield)+" shields"; Fill(hullBar,ship.Hull/ship.MaxHull); Fill(shieldBar,ship.Shield/ship.MaxShield); }
             else { Fill(hullBar,0); Fill(shieldBar,0); }
-            var chosen=game.Ships.Where(s=>s!=null && s.Selected).ToArray(); selected.text=chosen.Length==1?chosen[0].Stats.Name:chosen.Length+" ships selected";
+            var chosen=game.Ships.Where(s=>s!=null && s.Selected).ToArray(); selected.text=chosen.Length==1?chosen[0].Stats.Name+(chosen[0].Squadron!=null?"\n"+chosen[0].Squadron.ActiveCount+" / 6 fighters":""):chosen.Length+" units selected";
             foreach(var pair in buyButtons) pair.Value.interactable=game.CanCallIn(pair.Key);
             repair.interactable=game.Phase==BattlePhase.Preparation && !game.Paused && game.Salvage>=120 && game.Ships.Any(s=>s!=null && s.Friendly && s.Hull<s.MaxHull-.1f);
             refit.interactable=game.Phase==BattlePhase.Preparation && !game.Paused && game.Salvage>=200;

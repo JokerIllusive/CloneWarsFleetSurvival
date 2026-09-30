@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.2.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.2.0).
+[Download the Windows v0.3.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.3.0).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -48,14 +48,27 @@ every small defensive emplacement are not modeled.
 
 Republic bolts are blue and CIS bolts are red, following the space battle visuals
 in the [official Clone Wars Christophsis reference](https://www.starwars.com/databank/Christophsis).
-Weapon fire, explosions, and hyperspace have original synthesized effects with
-a Clone Wars-inspired feel. No episode recordings are included. Capital batteries
-and fighter cannons have different sounds, and tactical pause pauses audio.
+Venators and Munificents use short firing samples edited from the supplied
+`Venator.wav` and `Munificent Class.wav` recordings. ARC-170 and Vulture squadrons
+use their own supplied recordings. V-19 interceptors temporarily use the supplied
+V-Wing firing recording. Each weapon profile has two sample variations. Audio
+plays once per volley so all battery bolts do not stack the same recording.
+
+Hyperspace uses the supplied recording, edited into a 2.2-second charge and a
+separate exit effect. Extracts are mono 44.1 kHz PCM, with trimmed silence,
+normalized levels, and short edge fades. Other hulls and explosions retain
+synthesized effects. Tactical pause pauses battle audio. Extract timestamps and
+source hashes are recorded in `Assets/FleetSurvival/Resources/Audio/Sources.json`.
 
 Use the reinforcement panel or 1 / 2 / 3, then left-click an arrival point.
 A cyan hologram marks clear space; red means the position is blocked or outside
 the sector. Salvage is spent only when placement succeeds. Incoming ships reserve
-a fleet slot, so queued reinforcements count toward the 22-ship capacity.
+a fleet slot, so queued reinforcements count toward the 22-unit capacity. Each
+capital ship occupies one slot; each six-fighter squadron occupies one slot.
+
+An Arquitens call-in brings two cruisers at separated arrival points for 280
+salvage (140 each), occupying two slots. Both positions must be clear before
+salvage is charged. The CIS Munificent escort remains a single-ship call-in.
 
 After a short charge, the ship exits hyperspace with a stretched hull and light
 wake, completing its arrival in about three seconds. It cannot fight or take
@@ -86,6 +99,15 @@ focus fire or a new order can detach selected ships from their previous formatio
 The first supplied Venator is preserved in the source project and model preview.
 The detailed second Venator is used in gameplay. Carrier is a durable ship class in
 this version; deploying fighter squadrons uses the reinforcement panel.
+
+Fighter and interceptor units each contain six individual craft, selected and
+ordered as one squadron. Each craft has its own hull allocation and paired guns.
+Hull damage removes individual fighters and their gunfire; a squadron survives
+until its last fighter is lost. Repairs restore missing craft between waves.
+The original squadron damage budget is shared across the six fighters, so
+surviving squads lose damage output as they lose members. Squadrons share their
+shield pool and maneuver as a group. Fighter models are reduced for the tactical
+view; the ships use gameplay scale rather than literal kilometer-to-meter ratios.
 
 ## Procedural destruction
 
