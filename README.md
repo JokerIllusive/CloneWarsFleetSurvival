@@ -75,5 +75,17 @@ models use CC BY 4.0. This is an unofficial fan prototype.
 
 ## Source control
 
-Large GLB source assets use Git LFS. The remote repository still needs the user's
-GitHub/GitLab repository URL or account and repository name before publishing.
+Source repository: https://github.com/JokerIllusive/CloneWarsFleetSurvival
+
+Large GLB source assets use Git LFS. Install Git LFS before cloning so the ship
+models download along with the Unity project:
+
+```sh
+git lfs install
+git clone https://github.com/JokerIllusive/CloneWarsFleetSurvival.git
+cd CloneWarsFleetSurvival
+git lfs pull
+```
+
+Open the cloned folder in Unity 2022.3.62f3. Generated Library files and Windows
+builds are excluded from source control.
