@@ -16,6 +16,9 @@ namespace FleetSurvival
         public ShipDestruction Destruction { get; private set; }
         public FleetFormation Formation { get; set; }
         public float CurrentSpeed { get; private set; }
+        public bool IsArriving { get; set; }
+        public FleetWeapons Weapons { get; private set; }
+        public Transform VisualRoot { get; private set; }
         float cooldown, lastHit = -100;
         public bool Alive => Hull > 0;
 
@@ -26,7 +29,9 @@ namespace FleetSurvival
             MaxHull=Stats.Hull*multiplier; MaxShield=Stats.Shield*multiplier;
             Hull=MaxHull; Shield=MaxShield; cooldown=Random.Range(.1f,.8f);
             ShipVisuals.Build(transform,faction,kind);
+            VisualRoot=transform.GetChild(0);
             Destruction=gameObject.AddComponent<ShipDestruction>(); Destruction.Initialize(this);
+            Weapons=gameObject.AddComponent<FleetWeapons>(); Weapons.Initialize(this);
             var collider=gameObject.AddComponent<SphereCollider>(); collider.radius=Stats.Radius;
             SelectionRing=ShipVisuals.Ring(transform,Stats.Radius+1,FleetRules.Color(faction),.1f);
             SelectionRing.enabled=false;
@@ -37,12 +42,13 @@ namespace FleetSurvival
 
         public void Tick(float dt)
         {
-            if(!Alive) return;
+            if(!Alive || IsArriving) return;
+            Weapons.Tick(dt);
             SelectionRing.enabled=Selected;
             if(Game.BattleTime-lastHit>7) Shield=Mathf.Min(MaxShield,Shield+MaxShield*.025f*dt);
             cooldown-=dt;
             FleetShip target=ForcedTarget;
-            if(target == null || !target.Alive || target.Friendly==Friendly) { ForcedTarget=null; target=Game.NearestEnemy(this); }
+            if(target == null || !target.Alive || target.IsArriving || target.Friendly==Friendly) { ForcedTarget=null; target=Game.NearestEnemy(this); }
             float distance=target!=null ? Vector3.Distance(transform.position,target.transform.position) : float.MaxValue;
             bool inRange=distance<=Stats.Range;
             Vector3 desired=transform.position;
@@ -109,7 +115,7 @@ namespace FleetSurvival
         public void Damage(float amount) => Damage(amount,transform.position+transform.forward*Stats.Radius);
         public void Damage(float amount,Vector3 impact)
         {
-            if(!Alive) return;
+            if(!Alive || IsArriving) return;
             lastHit=Game.BattleTime;
             float absorbed=Mathf.Min(Shield,amount); Shield-=absorbed; Hull-=amount-absorbed;
             if(amount>absorbed) Destruction.HullHit(impact);

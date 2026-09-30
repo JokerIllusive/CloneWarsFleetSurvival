@@ -13,6 +13,11 @@ namespace FleetSurvival
         public readonly List<FleetShip> Ships=new List<FleetShip>();
         public readonly List<FleetBolt> Bolts=new List<FleetBolt>();
         readonly List<FleetFormation> formations=new List<FleetFormation>();
+        readonly List<FleetJump> jumps=new List<FleetJump>();
+        GameObject placementGhost;
+        public ShipClass? SelectedReinforcement { get; private set; }
+        public int IncomingCount => jumps.Count;
+        public int FleetCapacityUsed => FriendlyCount+jumps.Count(j=>j.Ship==null);
         public Faction PlayerFaction { get; private set; }
         public BattlePhase Phase { get; private set; }=BattlePhase.Menu;
         public int Wave { get; private set; }
@@ -34,14 +39,17 @@ namespace FleetSurvival
         public Vector2 DragStart { get; private set; }
         public Vector2 DragCurrent { get; private set; }
         Vector3 cameraFocus=new Vector3(0,0,0);
-        float cameraDistance=103, spawnTimer, messageTimer, soundTimer;
+        float cameraDistance=103, spawnTimer, messageTimer;
         int enemiesRemaining, spawnIndex;
         bool bossQueued, gesture;
         Vector2 mouseStart;
         readonly Plane commandPlane=new Plane(Vector3.up,Vector3.zero);
         Transform world, shipsRoot, effectsRoot;
         AudioSource audioSource;
-        AudioClip laserClip, explosionClip, waveClip;
+        AudioClip explosionClip, waveClip;
+        readonly List<AudioSource> soundVoices=new List<AudioSource>();
+        readonly Dictionary<FleetShip,float> lastWeaponSound=new Dictionary<FleetShip,float>();
+        int nextVoice;
         bool muted;
 
         void Awake()
@@ -109,9 +117,9 @@ namespace FleetSurvival
                 GridLine(new Vector3(-72,-1,i*12),new Vector3(72,-1,i*12));
             }
             audioSource=gameObject.AddComponent<AudioSource>(); audioSource.spatialBlend=0; audioSource.volume=.2f;
-            laserClip=Tone("Turbolaser",.12f,800,120,.12f);
-            explosionClip=Tone("Reactor burst",.4f,160,25,.3f,true);
+            explosionClip=FleetSound.Get("Explosion");
             waveClip=Tone("Incoming fleet",.5f,330,500,.2f);
+            for(int i=0;i<24;i++) { var voice=new GameObject("Battle sound voice "+i,typeof(AudioSource)).GetComponent<AudioSource>(); voice.transform.SetParent(transform); voice.playOnAwake=false; voice.spatialBlend=0; soundVoices.Add(voice); }
         }
 
         void GridLine(Vector3 a,Vector3 b)
@@ -166,10 +174,12 @@ namespace FleetSurvival
 
         public void ClearBattle()
         {
+            CancelReinforcementPlacement(); foreach(var jump in jumps) jump.Cancel(); jumps.Clear();
             foreach(var s in Ships) if(s!=null) Destroy(s.gameObject);
             foreach(var b in Bolts) if(b!=null) Destroy(b.gameObject);
             Ships.Clear(); Bolts.Clear();
             formations.Clear();
+            foreach(var voice in soundVoices) voice.Stop(); lastWeaponSound.Clear();
             foreach(Transform effect in effectsRoot) Destroy(effect.gameObject);
             gesture=false; IsDragging=false; AttackMoveMode=false;
         }
@@ -189,16 +199,68 @@ namespace FleetSurvival
 
         public bool Recruit(ShipClass kind)
         {
-            if(Phase!=BattlePhase.Preparation || Paused || kind==ShipClass.Flagship) return false;
-            int cost=FleetRules.Stats(PlayerFaction,kind).Cost;
-            if(Salvage<cost) { Notify("Insufficient salvage for that reinforcement."); return false; }
-            if(FriendlyCount>=FleetRules.FleetLimit) { Notify("Fleet capacity reached (22 ships)."); return false; }
-            Salvage-=cost;
             Vector3 origin=Flagship!=null?Flagship.transform.position:Vector3.zero;
             Vector3 position=FindReinforcementPosition(origin,kind);
-            Spawn(PlayerFaction,kind,true,false,position);
-            Notify("Reinforcement deployed: "+FleetRules.Stats(PlayerFaction,kind).Name+"."); return true;
+            return RecruitAt(kind,position);
         }
+        public bool CanCallIn(ShipClass kind) => (Phase==BattlePhase.Preparation || Phase==BattlePhase.Combat) && !Paused && kind!=ShipClass.Flagship && FleetCapacityUsed<FleetRules.FleetLimit && Salvage>=FleetRules.Stats(PlayerFaction,kind).Cost;
+        public bool BeginReinforcementPlacement(ShipClass kind)
+        {
+            if(!CanCallIn(kind)) { Notify("Call-in unavailable: check salvage, fleet capacity, and pause."); return false; }
+            CancelReinforcementPlacement(); SelectedReinforcement=kind;
+            placementGhost=new GameObject("Reinforcement hologram"); AddCombatEffect(placementGhost);
+            ShipVisuals.Build(placementGhost.transform,PlayerFaction,kind);
+            foreach(var renderer in placementGhost.GetComponentsInChildren<MeshRenderer>())
+            { var materials=renderer.sharedMaterials; for(int i=0;i<materials.Length;i++) materials[i]=Resources.Load<Material>("FleetHologram"); renderer.sharedMaterials=materials; }
+            UpdateReinforcementPreview(FindReinforcementPosition(Flagship!=null?Flagship.transform.position:Vector3.zero,kind));
+            Notify("CALL IN "+FleetRules.Stats(PlayerFaction,kind).Name+": left-click a clear arrival point. Right-click / Esc cancels."); return true;
+        }
+        public void UpdateReinforcementPreview(Vector3 position)
+        {
+            if(placementGhost==null || !SelectedReinforcement.HasValue) return;
+            position.y=0; placementGhost.transform.position=position;
+            var material=Resources.Load<Material>("FleetHologram");
+            material.color=IsArrivalClear(SelectedReinforcement.Value,position,null)?new Color(.1f,.7f,1,.2f):new Color(1,.15f,.05f,.26f);
+        }
+        public void CancelReinforcementPlacement()
+        {
+            SelectedReinforcement=null; if(placementGhost!=null) Destroy(placementGhost); placementGhost=null;
+            gesture=false; IsDragging=false;
+        }
+        public bool ConfirmReinforcement(Vector3 position)
+        {
+            if(!SelectedReinforcement.HasValue) return false;
+            bool result=RecruitAt(SelectedReinforcement.Value,position);
+            if(result) CancelReinforcementPlacement(); return result;
+        }
+        public bool RecruitAt(ShipClass kind,Vector3 position)
+        {
+            if(!CanCallIn(kind)) { Notify("Call-in unavailable: check salvage, fleet capacity, and pause."); return false; }
+            position.y=0;
+            if(!IsArrivalClear(kind,position,null)) { Notify("Arrival blocked. Choose clear space inside the sector."); return false; }
+            Salvage-=FleetRules.Stats(PlayerFaction,kind).Cost;
+            jumps.Add(new FleetJump(this,kind,position));
+            Notify("Hyperspace coordinates transmitted. Reinforcement inbound (3 seconds)."); return true;
+        }
+        bool IsArrivalClear(ShipClass kind,Vector3 position,FleetJump ignore)
+        {
+            float radius=FleetRules.Stats(PlayerFaction,kind).Radius;
+            if(position.magnitude>FleetRules.ArenaRadius-radius-1) return false;
+            if(Ships.Any(s=>s!=null && s.Alive && !s.IsArriving && Vector3.Distance(s.transform.position,position)<s.Stats.Radius+radius+1)) return false;
+            return !jumps.Any(j=>j!=ignore && Vector3.Distance(j.Destination,position)<FleetRules.Stats(PlayerFaction,j.Kind).Radius+radius+1);
+        }
+        public bool ResolveArrivalPosition(ShipClass kind,Vector3 requested,FleetJump ignore,out Vector3 result)
+        {
+            if(IsArrivalClear(kind,requested,ignore)) { result=requested; return true; }
+            for(int ring=1;ring<=4;ring++) for(int i=0;i<12;i++)
+            {
+                float angle=i*Mathf.PI/6; var point=requested+new Vector3(Mathf.Sin(angle),0,Mathf.Cos(angle))*ring*4;
+                if(IsArrivalClear(kind,point,ignore)) { result=point; return true; }
+            }
+            result=requested; return false;
+        }
+        public void RefundCallIn(ShipClass kind)
+        { Salvage+=FleetRules.Stats(PlayerFaction,kind).Cost; Notify("Arrival zone blocked. Reinforcement cancelled and salvage refunded."); }
 
         Vector3 FindReinforcementPosition(Vector3 origin,ShipClass kind)
         {
@@ -208,7 +270,7 @@ namespace FleetSurvival
                 float a=i*Mathf.PI/6;
                 Vector3 position=origin+new Vector3(Mathf.Sin(a),0,Mathf.Cos(a))*(12+ring*8);
                 if(position.magnitude>FleetRules.ArenaRadius-radius) continue;
-                if(Ships.All(s=>s==null || !s.Alive || Vector3.Distance(s.transform.position,position)>radius+s.Stats.Radius+1)) return position;
+                if(IsArrivalClear(kind,position,null)) return position;
             }
             return Vector3.zero;
         }
@@ -236,7 +298,7 @@ namespace FleetSurvival
 
         void Update()
         {
-            soundTimer-=Time.unscaledDeltaTime; messageTimer-=Time.unscaledDeltaTime;
+            messageTimer-=Time.unscaledDeltaTime;
             HandleCamera(); HandleInput();
             if(Phase==BattlePhase.Menu)
             { foreach(var s in Ships) if(s!=null) s.transform.Rotate(0,Time.deltaTime*2.5f,0); return; }
@@ -248,6 +310,7 @@ namespace FleetSurvival
         {
             if(Paused) return;
             if(Phase!=BattlePhase.Combat && Phase!=BattlePhase.Preparation) return;
+            for(int i=jumps.Count-1;i>=0;i--) if(!jumps[i].Tick(dt)) jumps.RemoveAt(i);
             if(Phase==BattlePhase.Combat)
             {
                 BattleTime+=dt; spawnTimer-=dt;
@@ -285,7 +348,7 @@ namespace FleetSurvival
             FleetShip result=null; float best=float.MaxValue;
             foreach(var ship in Ships)
             {
-                if(ship==null || !ship.Alive || ship.Friendly==from.Friendly) continue;
+                if(ship==null || !ship.Alive || ship.IsArriving || ship.Friendly==from.Friendly) continue;
                 float score=(ship.transform.position-from.transform.position).sqrMagnitude;
                 // Enemy capitals prioritize the command ship when distances are comparable.
                 if(!from.Friendly && ship.IsFlagship) score*=.72f;
@@ -295,14 +358,29 @@ namespace FleetSurvival
         }
 
         public void Fire(FleetShip from,FleetShip target,float damage)
+        { from.Weapons.FireVolley(target,damage); }
+
+        public void SpawnBolt(FleetShip from,FleetShip target,float damage,Vector3 muzzle,Color color)
         {
             var go=GameObject.CreatePrimitive(PrimitiveType.Cube); go.name="Turbolaser bolt";
             Destroy(go.GetComponent<Collider>()); go.transform.SetParent(effectsRoot);
-            go.transform.position=from.transform.position+Vector3.up*.9f+from.transform.forward*from.Stats.Radius*.5f;
+            go.transform.position=muzzle;
             go.transform.localScale=new Vector3(.14f,.14f,from.Kind==ShipClass.Fighter?1.3f:2.8f);
-            go.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(from.Faction==Faction.Republic?new Color(.25f,.65f,1):new Color(.3f,1,.35f),true);
+            go.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(color,true);
+            var core=GameObject.CreatePrimitive(PrimitiveType.Cube); Destroy(core.GetComponent<Collider>()); core.transform.SetParent(go.transform,false); core.transform.localScale=new Vector3(.4f,.4f,1.01f); core.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(Color.white,true);
             var bolt=go.AddComponent<FleetBolt>(); bolt.Game=this; bolt.Target=target; bolt.Damage=damage; Bolts.Add(bolt);
-            if(soundTimer<=0 && !muted) { audioSource.PlayOneShot(laserClip); soundTimer=.12f; }
+            if(!lastWeaponSound.TryGetValue(from,out float last) || BattleTime-last>.075f)
+            {
+                bool heavy=from.Kind!=ShipClass.Fighter && from.Kind!=ShipClass.Interceptor;
+                PlayBattleSound(FleetSound.Get((from.Faction==Faction.Republic?"Republic":"CIS")+(heavy?"Heavy":"Fighter")),muzzle,heavy?.13f:.065f);
+                lastWeaponSound[from]=BattleTime;
+            }
+        }
+        public void PlayBattleSound(AudioClip clip,Vector3 position,float volume)
+        {
+            if(muted || clip==null) return;
+            var voice=soundVoices[nextVoice++%soundVoices.Count]; voice.Stop(); voice.clip=clip; voice.volume=volume;
+            voice.panStereo=Mathf.Clamp((ViewCamera.WorldToViewportPoint(position).x-.5f)*1.5f,-.8f,.8f); voice.pitch=UnityEngine.Random.Range(.96f,1.04f); voice.Play();
         }
 
         public void RemoveBolt(FleetBolt bolt) { Bolts.Remove(bolt); if(bolt!=null) Destroy(bolt.gameObject); }
@@ -315,8 +393,10 @@ namespace FleetSurvival
             if(!ship.Friendly) { Salvage+=ship.Stats.Salvage; Kills++; }
             bool lostFlagship=ship.Friendly && ship.IsFlagship;
             Ships.Remove(ship); Destroy(ship.gameObject);
+            lastWeaponSound.Remove(ship);
             if(lostFlagship)
             {
+                CancelReinforcementPlacement(); foreach(var jump in jumps) jump.Cancel(); jumps.Clear();
                 Phase=BattlePhase.Defeat; Paused=false; SaveBest();
                 Notify("Command ship lost. Your fleet has been defeated."); HUD.Rebuild();
             }
@@ -334,7 +414,7 @@ namespace FleetSurvival
             var size=system.sizeOverLifetime; size.enabled=true; size.size=new ParticleSystem.MinMaxCurve(1,new AnimationCurve(new Keyframe(0,1),new Keyframe(1,0)));
             var renderer=go.GetComponent<ParticleSystemRenderer>(); renderer.sharedMaterial=Resources.Load<Material>("FleetParticle");
             system.Play(); Destroy(go,2);
-            if(!muted) audioSource.PlayOneShot(explosionClip);
+            PlayBattleSound(explosionClip,position,.25f);
         }
 
         void SaveBest()
@@ -350,24 +430,33 @@ namespace FleetSurvival
         {
             if(Phase==BattlePhase.Menu || Phase==BattlePhase.Defeat) return;
             Paused=!Paused; gesture=false; IsDragging=false; HUD.Rebuild();
+            foreach(var voice in soundVoices) { if(Paused) voice.Pause(); else voice.UnPause(); }
         }
-        public void ToggleMute() { muted=!muted; audioSource.mute=muted; HUD.SetMute(muted); }
-        public void SelectAll() { foreach(var s in Ships) if(s!=null && s.Alive && s.Friendly) s.Selected=true; }
+        public void ToggleMute() { muted=!muted; audioSource.mute=muted; foreach(var voice in soundVoices) voice.mute=muted; HUD.SetMute(muted); }
+        public void SelectAll() { foreach(var s in Ships) if(s!=null && s.Alive && s.Friendly && !s.IsArriving) s.Selected=true; }
         public void SelectFlagship()
         { foreach(var s in Ships) if(s!=null) s.Selected=s.Friendly && s.IsFlagship; if(Flagship!=null) { cameraFocus=Flagship.transform.position; PositionCamera(); } }
 
         void HandleInput()
         {
+            if(Input.GetKeyDown(KeyCode.Escape) && SelectedReinforcement.HasValue) { CancelReinforcementPlacement(); return; }
             if(Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Space)) TogglePause();
             if(Phase==BattlePhase.Menu || Phase==BattlePhase.Defeat || Paused || SmokeMode) return;
             if(Input.GetKeyDown(KeyCode.Tab)) SelectAll();
             if(Input.GetKeyDown(KeyCode.Q)) SelectFlagship();
             if(Input.GetKeyDown(KeyCode.F)) { AttackMoveMode=!AttackMoveMode; Notify(AttackMoveMode?"Attack-move ready. Right-click a destination.":"Move orders ready."); }
-            if(Input.GetKeyDown(KeyCode.Alpha1)) Recruit(ShipClass.Fighter);
-            if(Input.GetKeyDown(KeyCode.Alpha2)) Recruit(ShipClass.Frigate);
-            if(Input.GetKeyDown(KeyCode.Alpha3)) Recruit(ShipClass.Destroyer);
+            if(Input.GetKeyDown(KeyCode.Alpha1)) BeginReinforcementPlacement(ShipClass.Fighter);
+            if(Input.GetKeyDown(KeyCode.Alpha2)) BeginReinforcementPlacement(ShipClass.Frigate);
+            if(Input.GetKeyDown(KeyCode.Alpha3)) BeginReinforcementPlacement(ShipClass.Destroyer);
             if(Input.GetKeyDown(KeyCode.R)) RepairFleet();
             bool overUI=EventSystem.current!=null && EventSystem.current.IsPointerOverGameObject();
+            if(SelectedReinforcement.HasValue)
+            {
+                if(Input.GetMouseButtonDown(1)) { CancelReinforcementPlacement(); return; }
+                if(!overUI && commandPlane.Raycast(ViewCamera.ScreenPointToRay(Input.mousePosition),out float arrivalEnter))
+                { var point=ViewCamera.ScreenPointToRay(Input.mousePosition).GetPoint(arrivalEnter); UpdateReinforcementPreview(point); if(Input.GetMouseButtonDown(0)) ConfirmReinforcement(point); }
+                return;
+            }
             if(Input.GetMouseButtonDown(0) && !overUI) { mouseStart=Input.mousePosition; DragStart=mouseStart; gesture=true; }
             if(gesture && Input.GetMouseButton(0)) { DragCurrent=Input.mousePosition; IsDragging=(DragCurrent-mouseStart).magnitude>9; }
             if(gesture && Input.GetMouseButtonUp(0))
@@ -408,7 +497,7 @@ namespace FleetSurvival
 
         public void OrderMove(Vector3 destination,bool attackMove)
         {
-            var selected=Ships.Where(s=>s!=null && s.Alive && s.Selected && s.Friendly).ToArray();
+            var selected=Ships.Where(s=>s!=null && s.Alive && !s.IsArriving && s.Selected && s.Friendly).ToArray();
             if(selected.Length==0) { Notify("Select allied ships first, or press Tab to select the fleet."); return; }
             var formation=new FleetFormation(selected,destination,attackMove); formations.Add(formation);
             var marker=ShipVisuals.Ring(effectsRoot,2.2f,new Color(.2f,.9f,1),.16f,"Move destination"); marker.transform.position=formation.Goal; Destroy(marker.gameObject,1.5f);
@@ -463,7 +552,7 @@ namespace FleetSurvival
                     SelectAll(); OrderMove(new Vector3(5,0,5),false);
                     Check(Ships.All(s=>s.HasMoveOrder),"Formation orders "+faction,assertions);
                     foreach(var s in Ships) s.HasMoveOrder=false;
-                    LaunchWave(); Check(!Recruit(ShipClass.Fighter),"Combat shop blocked "+faction,assertions);
+                    LaunchWave(); Check(!Recruit(ShipClass.Fighter),"Insufficient salvage blocks call-in "+faction,assertions);
                     TogglePause(); float time=BattleTime; Tick(.5f); Check(Paused && BattleTime==time,"Pause freezes simulation "+faction,assertions); TogglePause();
                     int steps=0;
                     while(Phase==BattlePhase.Combat && steps++<6000) Tick(.04f);
@@ -472,6 +561,7 @@ namespace FleetSurvival
                     Check(Phase==BattlePhase.Defeat,"Flagship defeat "+faction,assertions);
                 }
                 CheckMovement(assertions);
+                CheckCombatUpgrades(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -488,6 +578,15 @@ namespace FleetSurvival
             cameraFocus=new Vector3(15,0,20); cameraDistance=90; PositionCamera();
             yield return null;
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-movement-preview.png"));
+            Begin(Faction.Republic); Salvage=1000; LaunchWave();
+            BeginReinforcementPlacement(ShipClass.Destroyer); UpdateReinforcementPreview(new Vector3(22,0,10));
+            yield return null;
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-callin-preview.png"));
+            ConfirmReinforcement(new Vector3(22,0,10));
+            for(int i=0;i<46;i++) Tick(.05f);
+            cameraFocus=new Vector3(12,0,0); PositionCamera();
+            yield return null;
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-hyperspace-preview.png"));
             Begin(Faction.Republic); LaunchWave();
             for(int i=0;i<300;i++) Tick(.04f);
             yield return null;
@@ -546,6 +645,46 @@ namespace FleetSurvival
             Check(escort.Formation!=oldFormation && Flagship.Formation==oldFormation && oldFormation.Count==4,"New order detaches only selected ships",assertions);
             var enemy=Spawn(Faction.CIS,ShipClass.Frigate,false,false,new Vector3(32,0,10)); escort.AttackTarget(enemy); Tick(.04f);
             Check(escort.Formation==null && escort.ForcedTarget==enemy && !escort.HasMoveOrder,"Focus fire leaves formation cleanly",assertions);
+        }
+        void CheckCombatUpgrades(List<string> assertions)
+        {
+            foreach(var faction in new[]{Faction.Republic,Faction.CIS})
+            {
+                foreach(var kind in new[]{ShipClass.Flagship,ShipClass.Fighter})
+                {
+                    Begin(faction); ClearBattle();
+                    var shooter=Spawn(faction,kind,true,false,Vector3.zero);
+                    var target=Spawn(faction==Faction.Republic?Faction.CIS:Faction.Republic,ShipClass.Frigate,false,false,new Vector3(0,0,20));
+                    Fire(shooter,target,shooter.Stats.Damage); shooter.Weapons.Tick(.5f);
+                    Check(Bolts.Count==shooter.Weapons.BarrelCount && Bolts.Count>1,"Multiple weapon barrels "+faction+" "+kind,assertions);
+                    Check(Mathf.Abs(Bolts.Sum(b=>b.Damage)-shooter.Stats.Damage)<.01f,"Salvo retains total damage "+faction+" "+kind,assertions);
+                    Check(Bolts.Select(b=>b.transform.position).Distinct().Count()>1,"Distinct muzzle positions "+faction+" "+kind,assertions);
+                    Color color=Bolts[0].GetComponent<Renderer>().sharedMaterial.color;
+                    Check(faction==Faction.Republic?color.b>color.r:color.r>color.g && color.r>color.b,"Clone Wars laser color "+faction+" "+kind,assertions);
+                }
+            }
+            Begin(Faction.Republic); Salvage=1000; LaunchWave(); int original=Salvage;
+            Check(BeginReinforcementPlacement(ShipClass.Destroyer) && Salvage==original && IncomingCount==0,"Selecting call-in does not charge salvage",assertions);
+            Check(!ConfirmReinforcement(Flagship.transform.position) && Salvage==original,"Blocked arrival does not charge salvage",assertions);
+            Check(!ConfirmReinforcement(new Vector3(200,0,0)) && Salvage==original,"Arrival outside sector rejected",assertions);
+            CancelReinforcementPlacement(); Check(!SelectedReinforcement.HasValue && IncomingCount==0,"Cancel call-in selection",assertions);
+            BeginReinforcementPlacement(ShipClass.Destroyer);
+            Check(ConfirmReinforcement(new Vector3(-35,0,-15)) && IncomingCount==1 && Salvage==original-400 && FriendlyCount==5,"Combat call-in reserves salvage and slot",assertions);
+            float elapsed=jumps[0].Elapsed;
+            TogglePause(); Tick(3); Check(jumps[0].Elapsed==elapsed && FriendlyCount==5,"Pause freezes hyperspace countdown",assertions); TogglePause();
+            for(int i=0;i<46;i++) Tick(.05f);
+            var inbound=jumps[0].Ship;
+            Check(inbound!=null && inbound.IsArriving && !inbound.GetComponent<Collider>().enabled,"Ship exits hyperspace before becoming active",assertions);
+            float hull=inbound.Hull; inbound.Damage(inbound.MaxHull*3);
+            Check(inbound.Hull==hull,"Arriving ship cannot be damaged",assertions);
+            for(int i=0;i<16;i++) Tick(.05f);
+            Check(IncomingCount==0 && !inbound.IsArriving && inbound.GetComponent<Collider>().enabled && FriendlyCount==6,"Call-in finishes as an active ship",assertions);
+            Begin(Faction.Republic); Salvage=2000;
+            while(FriendlyCount<21) Spawn(Faction.Republic,ShipClass.Fighter,true,false,new Vector3(60,0,-50));
+            Check(RecruitAt(ShipClass.Fighter,new Vector3(-50,0,-20)) && FleetCapacityUsed==22 && !RecruitAt(ShipClass.Fighter,new Vector3(-50,0,20)),"Pending call-ins respect fleet capacity",assertions);
+            ReturnToMenu(); Check(IncomingCount==0 && !SelectedReinforcement.HasValue,"Menu clears pending reinforcements",assertions);
+            var rep=FleetSound.Get("RepublicHeavy"); var cis=FleetSound.Get("CISHeavy");
+            Check(rep!=cis && rep.frequency==44100 && FleetSound.Get("HyperspaceExit").length>1,"Separate original audio effects",assertions);
         }
         static void Check(bool condition,string name,List<string> checks) { if(!condition) throw new Exception("Smoke test failed: "+name); checks.Add(name); }
         [Serializable] public sealed class SmokeReport { public bool passed; public string error; public string[] checks; }

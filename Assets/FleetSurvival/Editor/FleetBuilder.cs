@@ -257,6 +257,7 @@ namespace FleetSurvival.Editor
             EnsureMaterial("FleetHull","Standard",Color.white);
             EnsureMaterial("FleetGlow","Unlit/Color",Color.white);
             EnsureMaterial("FleetParticle","FleetSurvival/SoftParticle",Color.white);
+            EnsureMaterial("FleetHologram","FleetSurvival/Hologram",new Color(.1f,.7f,1,.18f));
             EnsureMaterial("FleetParticle","FleetSurvival/SoftParticle",Color.white);
             EnsureMaterial("FleetStars","Particles/Standard Unlit",new Color(.7f,.8f,1));
             if(Resources.Load<TMP_FontAsset>("CommanderFont")==null)
@@ -294,6 +295,23 @@ namespace FleetSurvival.Editor
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded) throw new Exception("Windows game build failed.");
         }
         public static void BuildAndPreview()
-        { Build(); PreviewForwardDirections(); }
+        { Build(); PreviewForwardDirections(); PreviewAudio(); }
+        public static void PreviewAudio()
+        {
+            var samples=new System.Collections.Generic.List<float>();
+            foreach(var name in new[]{"RepublicHeavy","CISHeavy","RepublicFighter","CISFighter","HyperspaceCharge","HyperspaceExit","Explosion"})
+            {
+                var clip=FleetSound.Get(name); var data=new float[clip.samples]; clip.GetData(data,0);
+                samples.AddRange(data); samples.AddRange(new float[22050]);
+            }
+            string path=Path.GetFullPath(Path.Combine(Application.dataPath,"../../Audio-preview.wav"));
+            using(var writer=new BinaryWriter(File.Create(path)))
+            {
+                writer.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); writer.Write(36+samples.Count*2); writer.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt "));
+                writer.Write(16); writer.Write((short)1); writer.Write((short)1); writer.Write(44100); writer.Write(88200); writer.Write((short)2); writer.Write((short)16);
+                writer.Write(System.Text.Encoding.ASCII.GetBytes("data")); writer.Write(samples.Count*2);
+                foreach(var value in samples) writer.Write((short)(Mathf.Clamp(value,-1,1)*32767));
+            }
+        }
     }
 }

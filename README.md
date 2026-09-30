@@ -4,8 +4,10 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-Run `CloneWarsFleetSurvival.exe` from the supplied Windows folder. Keep the executable,
-its `_Data` directory, `UnityPlayer.dll`, and `MonoBleedingEdge` together.
+[Download the Windows v0.2.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.2.0).
+Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
+run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
+`MonoBleedingEdge` together. Unity is not required to play.
 
 Choose the Galactic Republic or Separatist Alliance. Each run begins with a command ship,
 two cruisers/frigates, two fighter squadrons, and 220 salvage. Position your ships, buy
@@ -28,11 +30,38 @@ an enemy flagship, and later waves introduce destroyers and carriers.
 | Pan camera | WASD, arrow keys, or middle mouse drag |
 | Zoom | Mouse wheel |
 | Pause/resume | Space or Esc |
-| Buy fighter / frigate / destroyer | 1 / 2 / 3, between waves |
+| Choose fighter / frigate / destroyer call-in | 1 / 2 / 3, during combat or between waves |
+| Confirm reinforcement arrival point | Left click clear space while placing a ship |
+| Cancel reinforcement placement | Right click or Esc |
 | Repair fleet | R, between waves |
 
 Ships automatically fire at nearby targets. The command panel includes additional
 reinforcement types, weapon refits, sound controls, and a tactical map.
+
+## Combat and reinforcements
+
+Ships fire staggered volleys from multiple muzzle positions. Fighters use paired
+wing cannons; capital ships use representative major twin batteries, with more
+barrels on larger ships. Each volley divides the existing weapon damage across
+its bolts to preserve combat balance. Independent rotating turret targeting and
+every small defensive emplacement are not modeled.
+
+Republic bolts are blue and CIS bolts are red, following the space battle visuals
+in the [official Clone Wars Christophsis reference](https://www.starwars.com/databank/Christophsis).
+Weapon fire, explosions, and hyperspace have original synthesized effects with
+a Clone Wars-inspired feel. No episode recordings are included. Capital batteries
+and fighter cannons have different sounds, and tactical pause pauses audio.
+
+Use the reinforcement panel or 1 / 2 / 3, then left-click an arrival point.
+A cyan hologram marks clear space; red means the position is blocked or outside
+the sector. Salvage is spent only when placement succeeds. Incoming ships reserve
+a fleet slot, so queued reinforcements count toward the 22-ship capacity.
+
+After a short charge, the ship exits hyperspace with a stretched hull and light
+wake, completing its arrival in about three seconds. It cannot fight or take
+damage during arrival. If the landing point becomes blocked, the ship tries nearby
+space; if no clear position is available, the call-in refunds its salvage.
+Repairs and weapon refits remain available between waves.
 
 ## Movement and formations
 
