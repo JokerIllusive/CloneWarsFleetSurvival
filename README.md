@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.3.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.3.0).
+[Download the Windows v0.4.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.4.0).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -75,6 +75,20 @@ wake, completing its arrival in about three seconds. It cannot fight or take
 damage during arrival. If the landing point becomes blocked, the ship tries nearby
 space; if no clear position is available, the call-in refunds its salvage.
 Repairs and weapon refits remain available between waves.
+
+## Orbital environment
+
+The sector now overlooks a detailed ocean planet with continents, shallow coastal
+waters, polar ice, and settlement lights on its night side. A smooth globe and
+separate drifting cloud layer replace the old plain sphere. Lighting follows the
+sector's starlight, with a day/night boundary, ocean highlights, a thin blue
+atmosphere, and a faint warm glow near sunset.
+
+The backdrop uses three layers of fine stars with varied brightness and color,
+over a subtle teal and violet nebula. It surrounds the camera, so panning and
+zooming retain a continuous space background. Slow planet rotation and cloud
+drift stop during tactical pause. The environment has no colliders and does not
+block combat or reinforcement placement.
 
 ## Movement and formations
 

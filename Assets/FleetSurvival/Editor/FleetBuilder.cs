@@ -260,6 +260,7 @@ namespace FleetSurvival.Editor
             EnsureMaterial("FleetHologram","FleetSurvival/Hologram",new Color(.1f,.7f,1,.18f));
             EnsureMaterial("FleetParticle","FleetSurvival/SoftParticle",Color.white);
             EnsureMaterial("FleetStars","Particles/Standard Unlit",new Color(.7f,.8f,1));
+            ConfigureEnvironment();
             if(Resources.Load<TMP_FontAsset>("CommanderFont")==null)
             {
                 AssetDatabase.CopyAsset("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset","Assets/FleetSurvival/Resources/CommanderFont.asset");
@@ -273,6 +274,34 @@ namespace FleetSurvival.Editor
             if(AssetDatabase.LoadAssetAtPath<Material>(path)!=null) return;
             var material=new Material(Shader.Find(shader)); material.color=color;
             AssetDatabase.CreateAsset(material,path); AssetDatabase.SaveAssets();
+        }
+        static void ConfigureEnvironment()
+        {
+            const string folder="Assets/FleetSurvival/Resources/Environment/";
+            foreach(string file in new[]{"PlanetSurface","PlanetLights","PlanetClouds","SpaceNebula"})
+            {
+                var importer=(TextureImporter)AssetImporter.GetAtPath(folder+file+".png");
+                if(importer==null) throw new Exception("Missing orbital environment texture: "+file);
+                importer.textureType=TextureImporterType.Default;importer.sRGBTexture=file=="PlanetSurface" || file=="SpaceNebula";
+                importer.alphaIsTransparency=false;importer.mipmapEnabled=true;importer.maxTextureSize=2048;
+                importer.wrapModeU=TextureWrapMode.Repeat;importer.wrapModeV=TextureWrapMode.Clamp;
+                importer.filterMode=FilterMode.Trilinear;importer.anisoLevel=4;
+                importer.textureCompression=file=="SpaceNebula"?TextureImporterCompression.Uncompressed:TextureImporterCompression.CompressedHQ;importer.SaveAndReimport();
+            }
+            EnvironmentMaterial("FleetSpaceSky","FleetSurvival/SpaceSky",new[]{"_MainTex","SpaceNebula"});
+            EnvironmentMaterial("FleetPlanet","FleetSurvival/PlanetSurface",new[]{"_MainTex","PlanetSurface","_LightsTex","PlanetLights","_CloudTex","PlanetClouds"});
+            EnvironmentMaterial("FleetPlanetClouds","FleetSurvival/PlanetClouds",new[]{"_MainTex","PlanetClouds"});
+            EnvironmentMaterial("FleetPlanetAtmosphere","FleetSurvival/PlanetAtmosphere",new string[0]);
+            AssetDatabase.SaveAssets();
+        }
+        static void EnvironmentMaterial(string name,string shaderName,string[] textures)
+        {
+            string path="Assets/FleetSurvival/Resources/"+name+".mat";
+            var material=AssetDatabase.LoadAssetAtPath<Material>(path);
+            var shader=Shader.Find(shaderName);if(shader==null) throw new Exception("Missing environment shader: "+shaderName);
+            if(material==null) { material=new Material(shader);AssetDatabase.CreateAsset(material,path); } else material.shader=shader;
+            for(int i=0;i<textures.Length;i+=2) material.SetTexture(textures[i],AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/FleetSurvival/Resources/Environment/"+textures[i+1]+".png"));
+            EditorUtility.SetDirty(material);
         }
 
         public static void Build()

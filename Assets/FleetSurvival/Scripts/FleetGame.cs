@@ -82,32 +82,8 @@ namespace FleetSurvival
             var cisFill=new GameObject("CIS hull fill",typeof(Light)).GetComponent<Light>();
             cisFill.type=LightType.Directional; cisFill.intensity=1.8f; cisFill.color=new Color(.9f,.95f,1);
             cisFill.cullingMask=1<<8; cisFill.transform.rotation=Quaternion.Euler(60,-35,0);
-            RenderSettings.ambientLight=new Color(.23f,.3f,.43f); RenderSettings.skybox=null;
-            // Stars are one mesh, rather than hundreds of separate objects.
-            var starGo=new GameObject("Starfield",typeof(MeshFilter),typeof(MeshRenderer));
-            starGo.transform.SetParent(world,false);
-            var vertices=new List<Vector3>(); var triangles=new List<int>(); var colors=new List<Color>();
-            var rng=new System.Random(7301);
-            for(int i=0;i<850;i++)
-            {
-                float x=(float)rng.NextDouble()*500-250, z=(float)rng.NextDouble()*500-250;
-                float y=-70-(float)rng.NextDouble()*60, size=.12f+(float)rng.NextDouble()*.34f;
-                int n=vertices.Count;
-                vertices.Add(new Vector3(x-size,y,z-size)); vertices.Add(new Vector3(x+size,y,z-size));
-                vertices.Add(new Vector3(x+size,y,z+size)); vertices.Add(new Vector3(x-size,y,z+size));
-                triangles.AddRange(new[]{n,n+2,n+1,n,n+3,n+2});
-                float brightness=.35f+(float)rng.NextDouble()*.65f;
-                for(int j=0;j<4;j++) colors.Add(new Color(brightness*.8f,brightness*.9f,brightness));
-            }
-            var starMesh=new Mesh { name="Sector stars",vertices=vertices.ToArray(),triangles=triangles.ToArray(),colors=colors.ToArray() };
-            starMesh.RecalculateBounds(); starGo.GetComponent<MeshFilter>().sharedMesh=starMesh;
-            var starMat=Resources.Load<Material>("FleetStars");
-            starGo.GetComponent<Renderer>().sharedMaterial=starMat!=null?starMat:ShipVisuals.Material(new Color(.5f,.65f,.9f),true);
-            var planet=GameObject.CreatePrimitive(PrimitiveType.Sphere); planet.name="Outer Rim planet";
-            planet.transform.SetParent(world,false); planet.transform.position=new Vector3(135,-98,75); planet.transform.localScale=Vector3.one*120;
-            Destroy(planet.GetComponent<Collider>()); planet.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(new Color(.055f,.16f,.33f));
-            var atmosphere=ShipVisuals.Ring(world,62,new Color(.18f,.5f,1),.65f,"Planet atmosphere");
-            atmosphere.transform.position=planet.transform.position+new Vector3(0,2,0);
+            RenderSettings.ambientLight=new Color(.23f,.3f,.43f);
+            new GameObject("Orbital environment",typeof(FleetEnvironment)).GetComponent<FleetEnvironment>().Initialize(this,world,-light.transform.forward);
             var boundary=ShipVisuals.Ring(world,FleetRules.ArenaRadius,new Color(.06f,.2f,.32f),.08f,"Sector boundary");
             boundary.transform.position=Vector3.down;
             for(int i=-6;i<=6;i++)

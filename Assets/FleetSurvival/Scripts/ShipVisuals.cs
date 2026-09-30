@@ -52,7 +52,7 @@ namespace FleetSurvival
             go.transform.SetParent(parent, false);
             var line = go.AddComponent<LineRenderer>();
             line.useWorldSpace = false; line.loop = true; line.positionCount = 64;
-            line.sharedMaterial = Material(Color.white, true);
+            line.sharedMaterial = Material(color, true);
             line.startColor = line.endColor = color; line.startWidth = line.endWidth = width;
             for (int i=0;i<64;i++) { float a=i*Mathf.PI*2/64; line.SetPosition(i,new Vector3(Mathf.Cos(a)*radius,-.3f,Mathf.Sin(a)*radius)); }
             return line;

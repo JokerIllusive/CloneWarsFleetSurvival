@@ -1,5 +1,12 @@
 # Asset credits
 
+## Original orbital environment
+
+Planet surface, night lights, cloud density, and nebula textures were generated
+procedurally for this prototype. The globe mesh, planet lighting, atmosphere,
+weather layer, and starfield shaders are original project code. No external
+planet photographs or skybox images are used.
+
 ## User-supplied audio recordings
 
 The user supplied `Venator.wav`, `Munificent Class.wav`, `ARC-170.wav`,

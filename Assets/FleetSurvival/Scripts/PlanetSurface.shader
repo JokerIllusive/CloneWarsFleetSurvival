@@ -1,0 +1,47 @@
+Shader "FleetSurvival/PlanetSurface"
+{
+    Properties
+    {
+        _MainTex ("Surface and land mask", 2D) = "white" {}
+        _LightsTex ("Night settlements", 2D) = "black" {}
+        _CloudTex ("Cloud shadows", 2D) = "black" {}
+    }
+    SubShader
+    {
+        Tags { "RenderType"="Opaque" }
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "UnityCG.cginc"
+            sampler2D _MainTex,_LightsTex,_CloudTex;
+            float3 _FleetSunDirection;
+            float _FleetCloudOffset;
+            struct appdata { float4 vertex:POSITION; float3 normal:NORMAL; float2 uv:TEXCOORD0; };
+            struct v2f { float4 pos:SV_POSITION; float3 normal:TEXCOORD0; float3 world:TEXCOORD1; float2 uv:TEXCOORD2; };
+            v2f vert(appdata v)
+            {
+                v2f o; o.pos=UnityObjectToClipPos(v.vertex); o.normal=UnityObjectToWorldNormal(v.normal);
+                o.world=mul(unity_ObjectToWorld,v.vertex).xyz; o.uv=v.uv; return o;
+            }
+            fixed4 frag(v2f i):SV_Target
+            {
+                float3 n=normalize(i.normal),view=normalize(_WorldSpaceCameraPos-i.world),sun=normalize(_FleetSunDirection);
+                float light=dot(n,sun),day=smoothstep(-.06,.24,light);
+                float4 surface=tex2D(_MainTex,i.uv);
+                float cloud=tex2D(_CloudTex,i.uv+float2(_FleetCloudOffset,0)).r;
+                float diffuse=max(0,light);
+                float3 color=surface.rgb*(.045+diffuse*1.8)*(1-cloud*.25*day);
+                float spec=pow(saturate(dot(n,normalize(view+sun))),90)*(1-surface.a)*day;
+                color+=float3(.8,.9,1)*spec*.38;
+                float cities=tex2D(_LightsTex,i.uv).r*(1-smoothstep(-.15,.15,light));
+                color+=float3(1,.57,.19)*cities*.85;
+                float rim=pow(1-saturate(dot(n,view)),3.5);
+                color+=float3(.025,.15,.27)*rim*day;
+                return fixed4(color,1);
+            }
+            ENDCG
+        }
+    }
+}
