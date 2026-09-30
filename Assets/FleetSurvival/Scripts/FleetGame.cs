@@ -12,6 +12,7 @@ namespace FleetSurvival
     {
         public readonly List<FleetShip> Ships=new List<FleetShip>();
         public readonly List<FleetBolt> Bolts=new List<FleetBolt>();
+        readonly List<FleetFormation> formations=new List<FleetFormation>();
         public Faction PlayerFaction { get; private set; }
         public BattlePhase Phase { get; private set; }=BattlePhase.Menu;
         public int Wave { get; private set; }
@@ -168,6 +169,7 @@ namespace FleetSurvival
             foreach(var s in Ships) if(s!=null) Destroy(s.gameObject);
             foreach(var b in Bolts) if(b!=null) Destroy(b.gameObject);
             Ships.Clear(); Bolts.Clear();
+            formations.Clear();
             foreach(Transform effect in effectsRoot) Destroy(effect.gameObject);
             gesture=false; IsDragging=false; AttackMoveMode=false;
         }
@@ -266,6 +268,7 @@ namespace FleetSurvival
                     spawnIndex++; spawnTimer=1.6f;
                 }
             }
+            for(int i=formations.Count-1;i>=0;i--) if(!formations[i].Tick(dt)) formations.RemoveAt(i);
             for(int i=Ships.Count-1;i>=0;i--) if(i<Ships.Count && Ships[i]!=null) Ships[i].Tick(dt);
             for(int i=Bolts.Count-1;i>=0;i--) if(i<Bolts.Count && Bolts[i]!=null) Bolts[i].Tick(dt);
             if(Phase==BattlePhase.Combat && enemiesRemaining<=0 && !bossQueued && EnemyCount==0)
@@ -391,7 +394,7 @@ namespace FleetSurvival
                 if(Physics.Raycast(ray,out var hit,500)) target=hit.collider.GetComponent<FleetShip>();
                 if(target!=null && !target.Friendly)
                 {
-                    foreach(var s in Ships) if(s!=null && s.Selected) { s.ForcedTarget=target; s.HasMoveOrder=false; }
+                    foreach(var s in Ships) if(s!=null && s.Selected) s.AttackTarget(target);
                     Notify("Focus fire: "+target.Stats.Name+".");
                 }
                 else if(commandPlane.Raycast(ray,out float enter))
@@ -407,14 +410,9 @@ namespace FleetSurvival
         {
             var selected=Ships.Where(s=>s!=null && s.Alive && s.Selected && s.Friendly).ToArray();
             if(selected.Length==0) { Notify("Select allied ships first, or press Tab to select the fleet."); return; }
-            int width=Mathf.CeilToInt(Mathf.Sqrt(selected.Length));
-            for(int i=0;i<selected.Length;i++)
-            {
-                Vector3 offset=new Vector3((i%width-(width-1)*.5f)*10,0,(i/width)*10);
-                selected[i].MoveTo(Vector3.ClampMagnitude(destination+offset,FleetRules.ArenaRadius-5),attackMove);
-            }
-            var marker=ShipVisuals.Ring(effectsRoot,2.2f,new Color(.2f,.9f,1),.16f,"Move destination"); marker.transform.position=destination; Destroy(marker.gameObject,1.5f);
-            Notify(attackMove?"Attack-move order issued.":"Formation move order issued.");
+            var formation=new FleetFormation(selected,destination,attackMove); formations.Add(formation);
+            var marker=ShipVisuals.Ring(effectsRoot,2.2f,new Color(.2f,.9f,1),.16f,"Move destination"); marker.transform.position=formation.Goal; Destroy(marker.gameObject,1.5f);
+            Notify(attackMove?"Fleet attack-move issued. Formation holds when enemies engage.":"Formation move issued. Escorts will keep pace with capital ships.");
         }
 
         public static Rect ScreenRect(Vector2 a,Vector2 b) => Rect.MinMaxRect(Mathf.Min(a.x,b.x),Mathf.Min(a.y,b.y),Mathf.Max(a.x,b.x),Mathf.Max(a.y,b.y));
@@ -449,8 +447,18 @@ namespace FleetSurvival
                     Check(Recruit(ShipClass.Fighter),"Recruit fighter "+faction,assertions);
                     Check(Salvage==initial-FleetRules.Stats(faction,ShipClass.Fighter).Cost,"Recruitment cost "+faction,assertions);
                     Flagship.Damage(Flagship.Shield+Flagship.MaxHull*.4f);
-                    Check(Flagship.Destruction.DetachedSections==1,"Procedural hull damage "+faction,assertions);
-                    Check(RepairFleet() && Flagship.Hull==Flagship.MaxHull && Flagship.Destruction.DetachedSections==0,"Fleet repair restores sections "+faction,assertions);
+                    Check(Flagship.Destruction.DamagedSections==1,"Procedural hull damage "+faction,assertions);
+                    Check(Flagship.GetComponentsInChildren<HullSection>(true).All(s=>s.gameObject.activeSelf),"Damaged hull stays intact "+faction,assertions);
+                    Check(Flagship.GetComponentsInChildren<HullSection>().Any(s=>s.ArmorFragments!=null && s.ArmorFragments.Length>0),"Small armor fragment assets "+faction,assertions);
+                    var block=new MaterialPropertyBlock(); bool burned=false;
+                    foreach(var section in Flagship.GetComponentsInChildren<HullSection>())
+                    { section.GetComponent<MeshRenderer>().GetPropertyBlock(block,0); burned|=!block.isEmpty && block.GetColor("baseColorFactor").r<.5f; }
+                    Check(burned,"Hull scorch is applied to textured materials "+faction,assertions);
+                    Check(RepairFleet() && Flagship.Hull==Flagship.MaxHull && Flagship.Destruction.DamagedSections==0,"Fleet repair restores sections "+faction,assertions);
+                    bool clean=true;
+                    foreach(var section in Flagship.GetComponentsInChildren<HullSection>())
+                    { section.GetComponent<MeshRenderer>().GetPropertyBlock(block,0); clean&=block.isEmpty; }
+                    Check(clean,"Repair clears hull scorches "+faction,assertions);
                     Check(!Recruit(ShipClass.Flagship),"No flagship purchase "+faction,assertions);
                     SelectAll(); OrderMove(new Vector3(5,0,5),false);
                     Check(Ships.All(s=>s.HasMoveOrder),"Formation orders "+faction,assertions);
@@ -463,6 +471,7 @@ namespace FleetSurvival
                     LaunchWave(); var flagship=Flagship; flagship.Damage(flagship.Shield+flagship.Hull+1);
                     Check(Phase==BattlePhase.Defeat,"Flagship defeat "+faction,assertions);
                 }
+                CheckMovement(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -474,6 +483,11 @@ namespace FleetSurvival
                 Application.Quit(1); yield break;
             }
             // Leave a combat scene visible briefly for a screenshot during automated verification.
+            Begin(Faction.Republic); SelectAll(); OrderMove(new Vector3(15,0,30),false);
+            for(int i=0;i<550;i++) Tick(.04f);
+            cameraFocus=new Vector3(15,0,20); cameraDistance=90; PositionCamera();
+            yield return null;
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-movement-preview.png"));
             Begin(Faction.Republic); LaunchWave();
             for(int i=0;i<300;i++) Tick(.04f);
             yield return null;
@@ -486,11 +500,52 @@ namespace FleetSurvival
             var doomed=Spawn(Faction.Republic,ShipClass.Destroyer,true,false,new Vector3(20,0,3));
             doomed.Damage(doomed.Shield+doomed.Hull+1);
             cameraFocus=new Vector3(0,0,3); cameraDistance=84; PositionCamera();
-            Notify("PROCEDURAL DESTRUCTION: intact ship / hull breach / destroyed hull debris");
+            Notify("HULL DAMAGE: intact ship / scorched hull + armor fragments / total destruction");
             yield return new WaitForSecondsRealtime(.6f);
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-destruction-preview.png"));
             yield return new WaitForSecondsRealtime(.3f);
             Application.Quit(0);
+        }
+        void CheckMovement(List<string> assertions)
+        {
+            Begin(Faction.Republic); ClearBattle();
+            var capital=Spawn(Faction.Republic,ShipClass.Destroyer,true,false,new Vector3(0,0,-35));
+            capital.MoveTo(new Vector3(0,0,25)); Vector3 initial=capital.transform.position;
+            Tick(.1f);
+            Check(capital.CurrentSpeed>0 && capital.CurrentSpeed<capital.Stats.Speed*.1f && Vector3.Distance(initial,capital.transform.position)<.1f,"Capital accelerates gradually",assertions);
+            for(int i=0;i<100;i++) Tick(.04f);
+            float cruising=capital.CurrentSpeed; var heading=capital.transform.rotation;
+            capital.MoveTo(new Vector3(0,0,-45)); Tick(.1f);
+            Check(Quaternion.Angle(heading,capital.transform.rotation)<=3.1f && capital.CurrentSpeed<cruising,"Capital brakes and turns without snapping",assertions);
+            for(int i=0;i<1800 && capital.HasMoveOrder;i++) Tick(.04f);
+            Check(!capital.HasMoveOrder && Vector3.Distance(capital.transform.position,capital.Destination)<1.1f && capital.CurrentSpeed<.3f,"Capital arrives and stops",assertions);
+            var pausedPosition=capital.transform.position; float pausedSpeed=capital.CurrentSpeed;
+            TogglePause(); Tick(1); Check(capital.transform.position==pausedPosition && capital.CurrentSpeed==pausedSpeed,"Pause freezes ship movement",assertions); TogglePause();
+            ClearBattle();
+            var fighter=Spawn(Faction.Republic,ShipClass.Fighter,true,false,new Vector3(-10,0,0));
+            fighter.MoveTo(new Vector3(45,0,0)); heading=fighter.transform.rotation; Tick(.2f);
+            Check(Quaternion.Angle(heading,fighter.transform.rotation)>20,"Fighters retain agile turning",assertions);
+            Begin(Faction.Republic); SelectAll(); OrderMove(new Vector3(18,0,30),false);
+            var members=Ships.ToArray(); var formation=Flagship.Formation;
+            Check(members.All(s=>s.Formation==formation) && formation.Count==5,"Fleet shares a moving formation",assertions);
+            bool pace=true,bounds=true;
+            for(int i=0;i<2300 && members.Any(s=>s.HasMoveOrder);i++)
+            {
+                Tick(.04f);
+                pace&=formation.Speed<=Flagship.Stats.Speed+.01f;
+                bounds&=members.All(s=>s.transform.position.magnitude<=FleetRules.ArenaRadius);
+            }
+            Check(pace,"Formation respects slow capital speed",assertions);
+            Check(bounds,"Formation stays inside battle sector",assertions);
+            Check(members.All(s=>!s.HasMoveOrder && Vector3.Distance(s.transform.position,s.Destination)<1.2f),"Formation reaches separate slots together",assertions);
+            SelectAll(); OrderMove(new Vector3(-20,0,15),false); var oldFormation=Flagship.Formation;
+            // Choose an actual member of this fresh fleet to leave its previous group.
+            var escort=Ships.First(s=>s.Kind==ShipClass.Fighter);
+            foreach(var s in Ships) s.Selected=s==escort;
+            OrderMove(new Vector3(35,0,0),false); Tick(.04f);
+            Check(escort.Formation!=oldFormation && Flagship.Formation==oldFormation && oldFormation.Count==4,"New order detaches only selected ships",assertions);
+            var enemy=Spawn(Faction.CIS,ShipClass.Frigate,false,false,new Vector3(32,0,10)); escort.AttackTarget(enemy); Tick(.04f);
+            Check(escort.Formation==null && escort.ForcedTarget==enemy && !escort.HasMoveOrder,"Focus fire leaves formation cleanly",assertions);
         }
         static void Check(bool condition,string name,List<string> checks) { if(!condition) throw new Exception("Smoke test failed: "+name); checks.Add(name); }
         [Serializable] public sealed class SmokeReport { public bool passed; public string error; public string[] checks; }

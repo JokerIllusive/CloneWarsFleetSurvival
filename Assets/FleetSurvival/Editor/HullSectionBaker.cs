@@ -99,8 +99,54 @@ namespace FleetSurvival.Editor
                 var piece=new GameObject("HullSection"+i,typeof(MeshFilter),typeof(MeshRenderer),typeof(HullSection));
                 piece.transform.SetParent(root.transform,false); piece.transform.localPosition=center;
                 piece.GetComponent<MeshFilter>().sharedMesh=mesh; piece.GetComponent<MeshRenderer>().sharedMaterials=materials.ToArray();
+                BakeArmorFragments(mesh,materials.ToArray(),directory,i,piece.GetComponent<HullSection>());
             }
             AssetDatabase.SaveAssets(); Debug.Log("HULL_SECTIONS_BAKED "+name+" / "+root.transform.childCount+" sections");
+        }
+        static void BakeArmorFragments(Mesh source,Material[] materials,string directory,int sectionIndex,HullSection hull)
+        {
+            var fragments=new Section[8]; for(int i=0;i<fragments.Length;i++) fragments[i]=new Section();
+            var vertices=source.vertices; var normals=source.normals; var uv=source.uv; var uv2=source.uv2;
+            var tangents=source.tangents; var colors=source.colors;
+            for(int sub=0;sub<source.subMeshCount;sub++)
+            {
+                var indices=source.GetTriangles(sub);
+                for(int t=0;t<indices.Length;t+=3)
+                {
+                    Vector3 midpoint=(vertices[indices[t]]+vertices[indices[t+1]]+vertices[indices[t+2]])/3;
+                    int row=Mathf.Clamp((int)(Mathf.InverseLerp(source.bounds.min.z,source.bounds.max.z,midpoint.z)*4),0,3);
+                    var fragment=fragments[row*2+(midpoint.x>=source.bounds.center.x?1:0)];
+                    if(!fragment.Triangles.TryGetValue(materials[sub],out var triangles)) { triangles=new List<int>(); fragment.Triangles[materials[sub]]=triangles; }
+                    for(int c=0;c<3;c++)
+                    {
+                        int old=indices[t+c];
+                        if(!fragment.Indices.TryGetValue(old,out int index))
+                        {
+                            index=fragment.Vertices.Count; fragment.Indices[old]=index;
+                            fragment.Vertices.Add(vertices[old]); fragment.Normals.Add(normals[old]);
+                            fragment.UV.Add(uv[old]); fragment.UV2.Add(uv2[old]); fragment.Tangents.Add(tangents[old]); fragment.Colors.Add(colors[old]);
+                        }
+                        triangles.Add(index);
+                    }
+                }
+            }
+            hull.ArmorFragments=new Mesh[8]; hull.FragmentCenters=new Vector3[8];
+            for(int i=0;i<fragments.Length;i++)
+            {
+                var fragment=fragments[i]; if(fragment.Vertices.Count==0) continue;
+                var bounds=new Bounds(fragment.Vertices[0],Vector3.zero); foreach(var v in fragment.Vertices) bounds.Encapsulate(v);
+                hull.FragmentCenters[i]=bounds.center;
+                for(int v=0;v<fragment.Vertices.Count;v++) fragment.Vertices[v]-=bounds.center;
+                var mesh=new Mesh {name=source.name+" armor "+i,indexFormat=IndexFormat.UInt32};
+                mesh.SetVertices(fragment.Vertices); mesh.SetNormals(fragment.Normals); mesh.SetUVs(0,fragment.UV); mesh.SetUVs(1,fragment.UV2); mesh.SetTangents(fragment.Tangents); mesh.SetColors(fragment.Colors);
+                mesh.subMeshCount=materials.Length;
+                for(int sub=0;sub<materials.Length;sub++) mesh.SetTriangles(fragment.Triangles.TryGetValue(materials[sub],out var triangles)?triangles:new List<int>(),sub);
+                mesh.RecalculateBounds();
+                string path=directory+"/Armor"+sectionIndex+"_"+i+".asset";
+                var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+                if(existing==null) AssetDatabase.CreateAsset(mesh,path); else { EditorUtility.CopySerialized(mesh,existing); UnityEngine.Object.DestroyImmediate(mesh); mesh=existing; }
+                hull.ArmorFragments[i]=mesh;
+            }
         }
         static Material OptimizeMaterial(Material source,string directory,int index,Dictionary<Texture,Texture> textures)
         {

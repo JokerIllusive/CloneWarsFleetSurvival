@@ -143,6 +143,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 0}
+  - {fileID: 4300000, guid: eda16b3ee69a73548bec4fdb3e9bab04, type: 2}
+  - {fileID: 4300000, guid: 0b8763fa412cb3f43828f0335ce56a7c, type: 2}
+  - {fileID: 4300000, guid: 797061dbfe3c9774880d427fb4a0c05a, type: 2}
+  - {fileID: 4300000, guid: 6bdfaf1ef1db9484abafa242e59d0539, type: 2}
+  - {fileID: 4300000, guid: 8caa00ca00ad40646bb8f98a1d46bf85, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  FragmentCenters:
+  - {x: 0, y: 0, z: 0}
+  - {x: 1.31644, y: -1.0722631, z: -2.7835228}
+  - {x: -0.50065684, y: -0.9557004, z: -0.28407526}
+  - {x: 0.032888174, y: 0, z: 0.13122964}
+  - {x: -0.48130345, y: -0.9348966, z: 0.23843169}
+  - {x: 1.1969811, y: 0.029119968, z: 1.0793736}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &6836638233991987193
 GameObject:
   m_ObjectHideFlags: 0
@@ -249,6 +267,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 5dd72ca5e41ed4f4f9995e443694ed37, type: 2}
+  - {fileID: 4300000, guid: 3348f7b6bd5e74447bfd92b4fb97a7a2, type: 2}
+  - {fileID: 4300000, guid: 698af4705ad9d214dad86d2222895b57, type: 2}
+  - {fileID: 4300000, guid: a3ca176ac05320b4cbd54e85ec30f457, type: 2}
+  - {fileID: 4300000, guid: 8c0c7102e25997a4b86a29c9e76eb527, type: 2}
+  - {fileID: 4300000, guid: 33a015f33068e3146b787ed2318abe03, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  FragmentCenters:
+  - {x: -0.40464413, y: -0.6547769, z: -4.231901}
+  - {x: 0.7252538, y: 0, z: -3.9408965}
+  - {x: -0.39715838, y: -0.88435435, z: -2.0282881}
+  - {x: 0.32322907, y: 0, z: 0}
+  - {x: -0.4630978, y: -0.74624175, z: 1.596287}
+  - {x: 0.03288853, y: -1.0032804, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &7073102626928009357
 GameObject:
   m_ObjectHideFlags: 0
@@ -355,6 +391,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 3a1cd74ab6e9ca841949dd4f35373e94, type: 2}
+  - {fileID: 0}
+  - {fileID: 4300000, guid: 31a3c9eab8027fe40b8c98fe39f047fa, type: 2}
+  - {fileID: 4300000, guid: c08bfcde040b1f845a9797db379ac5d3, type: 2}
+  - {fileID: 4300000, guid: 3379f9ea27530374198bd6f2bc087dff, type: 2}
+  - {fileID: 4300000, guid: e08f6fa67382c7a44b77fbc44c208b24, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  FragmentCenters:
+  - {x: -1.31644, y: -1.0722632, z: -2.7835224}
+  - {x: 0, y: 0, z: 0}
+  - {x: -0.032888174, y: 0, z: 0.13122988}
+  - {x: 0.50065684, y: -0.9557007, z: -0.28407526}
+  - {x: -1.1969812, y: 0.02911973, z: 1.0793738}
+  - {x: 0.48130345, y: -0.93489707, z: 0.23843122}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &8881898581171703206
 GameObject:
   m_ObjectHideFlags: 0
@@ -461,6 +515,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 4f49a499931d43e43a81434f7c455c58, type: 2}
+  - {fileID: 4300000, guid: 44e2476bbe9dab34f911f7ad76a48a56, type: 2}
+  - {fileID: 4300000, guid: 776e26d0abb704d4c9777e81c52aa751, type: 2}
+  - {fileID: 4300000, guid: 8e7f2b6e142d01b4286209ca93b6b8a3, type: 2}
+  - {fileID: 4300000, guid: ee54db52c5d243c42a65be1bb52d74df, type: 2}
+  - {fileID: 4300000, guid: 044e7ff217b64dc4cb86c6ff73f98860, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  FragmentCenters:
+  - {x: -0.72525394, y: 0, z: -3.9408967}
+  - {x: 0.40464413, y: -0.6547773, z: -4.2319016}
+  - {x: -0.32322907, y: 0, z: 0}
+  - {x: 0.39715844, y: -0.8843547, z: -2.0282888}
+  - {x: -0.032888412, y: -1.0032805, z: 0}
+  - {x: 0.46309775, y: -0.74624217, z: 1.5962863}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &8896778975911255932
 GameObject:
   m_ObjectHideFlags: 0
@@ -563,6 +635,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 4300000, guid: e76f8612fbec061458e9b335e0841104, type: 2}
+  - {fileID: 4300000, guid: 6ca707d879457d54cbaaa723e99b8f18, type: 2}
+  - {fileID: 4300000, guid: 210b5d2f0915b0846942df8c73808788, type: 2}
+  - {fileID: 0}
+  FragmentCenters:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: -0.51772684, y: 0, z: -0.08222103}
+  - {x: 0.29977, y: 0.07659939, z: 1.512173}
+  - {x: -0.67441535, y: -0.008371949, z: 3.3722863}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &8996149947853790636
 GameObject:
   m_ObjectHideFlags: 0
@@ -665,3 +755,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 4300000, guid: f571d593ac94f104f9374416573353f5, type: 2}
+  - {fileID: 4300000, guid: 12c55435acc7ac64085af4e65950a081, type: 2}
+  - {fileID: 0}
+  - {fileID: 4300000, guid: 91a14a15557b05b45b125143d46fcf46, type: 2}
+  FragmentCenters:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: -0.29977012, y: 0.07659951, z: 1.5121737}
+  - {x: 0.51772684, y: 0, z: -0.08222103}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0.67441535, y: -0.008372009, z: 3.3722866}

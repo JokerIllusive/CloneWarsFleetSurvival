@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 1985931070842835777}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.59622085, y: -0.5394529, z: -5.517111}
+  m_LocalPosition: {x: -0.79169554, y: 0.5999999, z: -5.01129}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -96,6 +96,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 7db9190abbde87b47ad9943124af45c3, type: 2}
+  - {fileID: 4300000, guid: bbcab07cbd774ff48baa4027713cb0e8, type: 2}
+  - {fileID: 4300000, guid: 64ce3702dd0cc584e86bd5a17120a5f6, type: 2}
+  - {fileID: 4300000, guid: 05f9b8cbfd495024fae860af8090031a, type: 2}
+  - {fileID: 4300000, guid: a6d8048133c77ed43b8ec14befe97910, type: 2}
+  - {fileID: 4300000, guid: 11d905b6e48d41c4080a02841a1344d2, type: 2}
+  - {fileID: 4300000, guid: f60a46228e5dc1a4895c7eb21b9ff791, type: 2}
+  - {fileID: 4300000, guid: 34f7c4d99653150458a95caadccf5098, type: 2}
+  FragmentCenters:
+  - {x: -0.060853124, y: -0.993661, z: -2.4591749}
+  - {x: 0.33186784, y: 0.5161345, z: -2.213138}
+  - {x: -0.25573418, y: -0.9817801, z: -0.98201656}
+  - {x: 0.19649655, y: 0.4997294, z: -0.8600402}
+  - {x: -0.0000042915344, y: -0.9570644, z: 0.9909308}
+  - {x: 0.08276135, y: -1.2681859, z: 0.9476819}
+  - {x: 0.01839286, y: -0.96983063, z: 1.9332536}
+  - {x: 0.08276135, y: -0.8153068, z: 0.98542047}
 --- !u!1 &3401220704218825265
 GameObject:
   m_ObjectHideFlags: 0
@@ -124,7 +142,7 @@ Transform:
   m_GameObject: {fileID: 3401220704218825265}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.78118116, y: -0.10395706, z: -0.029567719}
+  m_LocalPosition: {x: -0.78118056, y: -0.10395682, z: 0.029569149}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -192,6 +210,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: b80ceb2f5a37e3743a06a5072329ad32, type: 2}
+  - {fileID: 4300000, guid: fb4f288d3fb6372478b11d28865b2256, type: 2}
+  - {fileID: 4300000, guid: 137c3211575274f48a863b55117066db, type: 2}
+  - {fileID: 4300000, guid: 0dabdec3fd2249448838713ba078f458, type: 2}
+  - {fileID: 4300000, guid: c1a69053039838e4bbdbfb379562c5c0, type: 2}
+  - {fileID: 4300000, guid: 10dca52500d7a1846979ecb4c106c667, type: 2}
+  - {fileID: 4300000, guid: 0e38e7dbed42a2d4aafd35fe953c77ae, type: 2}
+  - {fileID: 4300000, guid: 595d07a5dcb21f146b5a1b3b418e0f55, type: 2}
+  FragmentCenters:
+  - {x: -0.0067703724, y: -0.2658739, z: -2.3367496}
+  - {x: 0.08443695, y: 0.09419775, z: -2.3482637}
+  - {x: -0.25457, y: -0.3147195, z: -0.7427821}
+  - {x: 0.18717045, y: -0.14252818, z: -0.05746019}
+  - {x: -0.11344859, y: -0.502314, z: 0.8092066}
+  - {x: 0.2909031, y: -0.10766989, z: 0.53694934}
+  - {x: -0.12322992, y: -0.34694594, z: 2.2437005}
+  - {x: 0.31771925, y: -0.40503597, z: 2.3379655}
 --- !u!1 &5846470955495227644
 GameObject:
   m_ObjectHideFlags: 0
@@ -257,7 +293,7 @@ Transform:
   m_GameObject: {fileID: 6411084328939926562}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.7916962, y: 0.60000014, z: 5.0112906}
+  m_LocalPosition: {x: 0.59622043, y: -0.539453, z: 5.517112}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -325,6 +361,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 38e2f25554db0a54dbad4cdf9cc12b13, type: 2}
+  - {fileID: 4300000, guid: a0a8bd19687e4e34da5c6453e9711c0a, type: 2}
+  - {fileID: 4300000, guid: 37f9900ceea015c49b0013218f6bca53, type: 2}
+  - {fileID: 4300000, guid: 14bf9610a68281340b689ad6d553a376, type: 2}
+  - {fileID: 4300000, guid: 090d680c7548d0a4abc45ef1bd48627b, type: 2}
+  - {fileID: 4300000, guid: b3a37c800a062df4ba450d4edb9a4ba6, type: 2}
+  - {fileID: 4300000, guid: ca3cae3e65a24a443ad8bed5111ae04b, type: 2}
+  - {fileID: 0}
+  FragmentCenters:
+  - {x: -0.2596638, y: -0.20663702, z: -2.195294}
+  - {x: 0.28797308, y: -0.024589956, z: -1.9698406}
+  - {x: -0.2676572, y: 0.056316853, z: -0.7104521}
+  - {x: 0.25743774, y: -0.027648449, z: -0.7638446}
+  - {x: -0.21733105, y: -0.065194726, z: 0.6027956}
+  - {x: 0.1510526, y: 0.060272932, z: 0.674942}
+  - {x: -0.33042264, y: -0.022200763, z: 2.1980472}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &7287023243078414345
 GameObject:
   m_ObjectHideFlags: 0
@@ -353,7 +407,7 @@ Transform:
   m_GameObject: {fileID: 7287023243078414345}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.7916825, y: 0.60000014, z: 5.0112906}
+  m_LocalPosition: {x: -0.59621954, y: -0.539453, z: 5.517112}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -421,6 +475,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 5a8e3c04350824c429e90d42afe9de42, type: 2}
+  - {fileID: 4300000, guid: 174557596df1f254ea395f3e9b70f3b3, type: 2}
+  - {fileID: 4300000, guid: 0c7b052869ec508418f501262ceb6501, type: 2}
+  - {fileID: 4300000, guid: 2f5ba1f539c3f4b4695709792473c890, type: 2}
+  - {fileID: 4300000, guid: ab74aeecca30b3a4b965a5da9c1b9972, type: 2}
+  - {fileID: 4300000, guid: d048b296d05938349a88be08e5026777, type: 2}
+  - {fileID: 0}
+  - {fileID: 4300000, guid: 0ae2df7437ca4dd4abcd6d68743a2235, type: 2}
+  FragmentCenters:
+  - {x: -0.28797328, y: -0.024589956, z: -1.9698406}
+  - {x: 0.25966355, y: -0.20663702, z: -2.195294}
+  - {x: -0.25743824, y: -0.027648449, z: -0.7638446}
+  - {x: 0.26765704, y: 0.056316853, z: -0.7104521}
+  - {x: -0.15105286, y: 0.060272932, z: 0.674942}
+  - {x: 0.21733126, y: -0.065194726, z: 0.6027956}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0.33042222, y: -0.022200763, z: 2.1980472}
 --- !u!1 &8733959691360829875
 GameObject:
   m_ObjectHideFlags: 0
@@ -449,7 +521,7 @@ Transform:
   m_GameObject: {fileID: 8733959691360829875}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.78118074, y: -0.10395706, z: -0.029567957}
+  m_LocalPosition: {x: 0.78118116, y: -0.10395682, z: 0.029569149}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -517,6 +589,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 5a1e9d0dc11095743b7063155e417bfd, type: 2}
+  - {fileID: 4300000, guid: 7c05c3628dcaad54a86f4c094b661a27, type: 2}
+  - {fileID: 4300000, guid: bed88100c8b72344095dc68a3e464f71, type: 2}
+  - {fileID: 4300000, guid: e28f2f650380a1f428212b65ac23aa16, type: 2}
+  - {fileID: 4300000, guid: 264679416528b494cbd54f521ef9f62a, type: 2}
+  - {fileID: 4300000, guid: c1d37d2effb5ba54483d3d895be3ec85, type: 2}
+  - {fileID: 4300000, guid: 723e0950fd4be0c4ca6bf6aa2a28882b, type: 2}
+  - {fileID: 4300000, guid: a43d45ef9e7f626428020df0d9236485, type: 2}
+  FragmentCenters:
+  - {x: -0.08443719, y: 0.09419775, z: -2.3482637}
+  - {x: 0.006770134, y: -0.2658739, z: -2.3367496}
+  - {x: -0.18717045, y: -0.14252818, z: -0.05746019}
+  - {x: 0.25456977, y: -0.3147195, z: -0.74278235}
+  - {x: -0.29090315, y: -0.10766989, z: 0.5369493}
+  - {x: 0.11344838, y: -0.502314, z: 0.80920655}
+  - {x: -0.3177192, y: -0.40503597, z: 2.3379655}
+  - {x: 0.12322968, y: -0.34694594, z: 2.2437}
 --- !u!1 &9122017102998556080
 GameObject:
   m_ObjectHideFlags: 0
@@ -545,7 +635,7 @@ Transform:
   m_GameObject: {fileID: 9122017102998556080}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.59621936, y: -0.5394529, z: -5.5171113}
+  m_LocalPosition: {x: 0.7916828, y: 0.5999999, z: -5.01129}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -613,3 +703,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: f42ac5e736e8da54d9730e854c782b7d, type: 2}
+  - {fileID: 4300000, guid: 5fe8211b0869fec49b5cb9059a62d36f, type: 2}
+  - {fileID: 4300000, guid: fb993826b0ac91b45848915ac388d39d, type: 2}
+  - {fileID: 4300000, guid: 28dba21efec0e0f42af55391756a3f23, type: 2}
+  - {fileID: 4300000, guid: da5637e0cb4b0b64f85e7d8d792b1a20, type: 2}
+  - {fileID: 4300000, guid: 5a0eed7ac10d66a448b940b38b7b628e, type: 2}
+  - {fileID: 4300000, guid: 8775b36fb9380124e9b62e9743be3003, type: 2}
+  - {fileID: 4300000, guid: 99463e7e5b9f62d428f18f16c40dd30d, type: 2}
+  FragmentCenters:
+  - {x: -0.33186755, y: 0.5161345, z: -2.213138}
+  - {x: 0.060866565, y: -0.993661, z: -2.4591749}
+  - {x: -0.1964829, y: 0.4997294, z: -0.8600402}
+  - {x: 0.25574756, y: -0.98178, z: -0.98201656}
+  - {x: -0.082747936, y: -1.2681859, z: 0.9476819}
+  - {x: 0.000017166138, y: -0.9570644, z: 0.9909308}
+  - {x: -0.082747936, y: -0.8153068, z: 0.98542047}
+  - {x: -0.018379629, y: -0.96983063, z: 1.9332536}

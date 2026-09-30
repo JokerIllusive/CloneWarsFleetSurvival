@@ -9,8 +9,9 @@ namespace FleetSurvival
         readonly List<HullSection> sections=new List<HullSection>();
         readonly Dictionary<HullSection,Vector3> originalPositions=new Dictionary<HullSection,Vector3>();
         readonly List<GameObject> fires=new List<GameObject>();
+        readonly HashSet<HullSection> scorched=new HashSet<HullSection>();
         int damageStage;
-        public int DetachedSections { get; private set; }
+        public int DamagedSections { get; private set; }
         public float Mobility => damageStage>=2?.65f:1;
         public float Firepower => damageStage>=1?.85f:1;
         public void Initialize(FleetShip owner)
@@ -29,22 +30,32 @@ namespace FleetSurvival
                 HullSection closest=null; float best=float.MaxValue;
                 foreach(var section in sections)
                 {
-                    if(section==null || !section.gameObject.activeSelf) continue;
+                    if(section==null || !section.gameObject.activeSelf || scorched.Contains(section)) continue;
                     float distance=(section.transform.position-impact).sqrMagnitude;
                     if(distance<best) { closest=section; best=distance; }
                 }
                 if(closest!=null)
                 {
-                    SpawnFragment(closest,true); closest.gameObject.SetActive(false); DetachedSections++;
-                    FireAt(transform.InverseTransformPoint(closest.transform.position));
+                    SpawnArmorFragments(closest,impact); scorched.Add(closest); DamagedSections++;
+                    var renderer=closest.GetComponent<MeshRenderer>(); var materials=renderer.sharedMaterials;
+                    for(int sub=0;sub<materials.Length;sub++)
+                    {
+                        var tint=new MaterialPropertyBlock(); var burn=new Color(.3f,.24f,.2f);
+                        foreach(var property in new[]{"_Color","_BaseColor","baseColorFactor"})
+                            if(materials[sub].HasProperty(property)) tint.SetColor(property,materials[sub].GetColor(property)*burn);
+                        if(materials[sub].HasProperty("emissiveFactor")) tint.SetColor("emissiveFactor",Color.black);
+                        renderer.SetPropertyBlock(tint,sub);
+                    }
+                    Vector3 breach=renderer.bounds.ClosestPoint(impact); breach.y=renderer.bounds.max.y+.15f;
+                    FireAt(transform.InverseTransformPoint(breach));
                 }
             }
         }
         public void BreakApart()
         {
-            foreach(var section in sections) if(section!=null && section.gameObject.activeSelf) { SpawnFragment(section,false); section.gameObject.SetActive(false); }
+            foreach(var section in sections) if(section!=null && section.gameObject.activeSelf) { SpawnFragment(section); section.gameObject.SetActive(false); }
         }
-        void SpawnFragment(HullSection section,bool smallHit)
+        void SpawnFragment(HullSection section)
         {
             var filter=section.GetComponent<MeshFilter>(); var renderer=section.GetComponent<MeshRenderer>();
             var fragment=new GameObject("Drifting hull debris",typeof(MeshFilter),typeof(MeshRenderer),typeof(FleetDebris));
@@ -55,8 +66,28 @@ namespace FleetSurvival
             fragment.GetComponent<MeshRenderer>().sharedMaterials=renderer.sharedMaterials;
             var debris=fragment.GetComponent<FleetDebris>(); debris.Game=ship.Game;
             Vector3 outward=(section.transform.position-ship.transform.position).normalized;
-            debris.Velocity=outward*Random.Range(smallHit?1.8f:4,smallHit?3.8f:8)+Random.insideUnitSphere*1.5f;
-            debris.Spin=Random.onUnitSphere*Random.Range(8,28); debris.Lifetime=smallHit?7:10;
+            debris.Velocity=outward*Random.Range(4,8)+Random.insideUnitSphere*1.5f;
+            debris.Spin=Random.onUnitSphere*Random.Range(8,28); debris.Lifetime=10;
+        }
+        void SpawnArmorFragments(HullSection section,Vector3 impact)
+        {
+            if(section.ArmorFragments==null || section.FragmentCenters==null) return;
+            var chosen=new List<int>();
+            for(int i=0;i<section.ArmorFragments.Length;i++) if(section.ArmorFragments[i]!=null) chosen.Add(i);
+            chosen.Sort((a,b)=>(section.transform.TransformPoint(section.FragmentCenters[a])-impact).sqrMagnitude.CompareTo((section.transform.TransformPoint(section.FragmentCenters[b])-impact).sqrMagnitude));
+            for(int n=0;n<Mathf.Min(3,chosen.Count);n++)
+            {
+                int i=chosen[n]; var go=new GameObject("Armor fragment",typeof(MeshFilter),typeof(MeshRenderer),typeof(FleetDebris));
+                ship.Game.AddCombatEffect(go); go.layer=section.gameObject.layer;
+                go.transform.SetPositionAndRotation(section.transform.TransformPoint(section.FragmentCenters[i]),section.transform.rotation);
+                go.transform.localScale=section.transform.lossyScale*.85f;
+                go.GetComponent<MeshFilter>().sharedMesh=section.ArmorFragments[i];
+                go.GetComponent<MeshRenderer>().sharedMaterials=section.GetComponent<MeshRenderer>().sharedMaterials;
+                var debris=go.GetComponent<FleetDebris>(); debris.Game=ship.Game;
+                Vector3 away=(go.transform.position-ship.transform.position).normalized;
+                debris.Velocity=away*Random.Range(5,8)+Vector3.up*Random.Range(.6f,1.8f)+Random.insideUnitSphere;
+                debris.Spin=Random.onUnitSphere*Random.Range(20,55); debris.Lifetime=6;
+            }
         }
         void FireAt(Vector3 local)
         {
@@ -72,8 +103,14 @@ namespace FleetSurvival
         }
         public void Repair()
         {
-            foreach(var section in sections) if(section!=null) { section.gameObject.SetActive(true); section.transform.localPosition=originalPositions[section]; }
-            foreach(var fire in fires) if(fire!=null) Destroy(fire); fires.Clear(); damageStage=0; DetachedSections=0;
+            foreach(var section in sections) if(section!=null)
+            {
+                section.gameObject.SetActive(true); section.transform.localPosition=originalPositions[section];
+                var renderer=section.GetComponent<MeshRenderer>(); renderer.SetPropertyBlock(null);
+                for(int sub=0;sub<renderer.sharedMaterials.Length;sub++) renderer.SetPropertyBlock(null,sub);
+            }
+            foreach(var fire in fires) if(fire!=null) Destroy(fire); fires.Clear(); damageStage=0; DamagedSections=0;
+            scorched.Clear();
         }
     }
     public sealed class FleetDebris : MonoBehaviour

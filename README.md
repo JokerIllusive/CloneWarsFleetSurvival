@@ -34,6 +34,19 @@ an enemy flagship, and later waves introduce destroyers and carriers.
 Ships automatically fire at nearby targets. The command panel includes additional
 reinforcement types, weapon refits, sound controls, and a tactical map.
 
+## Movement and formations
+
+Capital ships accelerate gradually, brake before arriving, and turn through wide
+arcs. Cruisers and escorts handle faster; fighters and interceptors make much
+tighter turns in combat. Ships fly nose-first, with each imported model aligned
+to the game's forward direction.
+
+A move order assigns the selected ships separate slots in a shared formation.
+The formation travels at the pace of its slowest member and slows further if ships
+fall behind. Spacing accounts for the largest hull, and the destination is adjusted
+to keep the group inside the sector. Attack-move holds the advance while engaging;
+focus fire or a new order can detach selected ships from their previous formation.
+
 ## Ships
 
 - Republic: detailed Venator command ship, Venator destroyer/carrier, Acclamator,
@@ -47,11 +60,13 @@ this version; deploying fighter squadrons uses the reinforcement panel.
 
 ## Procedural destruction
 
-Imported hull triangles are partitioned into six visible sections during authoring.
-At 65%, 35%, and 15% remaining hull, the section nearest the damaging hit detaches,
-breach fires appear, and ship performance degrades. The remaining sections break
-away when the ship is destroyed. Debris spins and drifts for a limited time; tactical
-pause freezes its motion. Repairing a surviving ship restores its sections and stats.
+Imported hull triangles are partitioned into six sections during authoring, with
+smaller shared armor fragment meshes for each section. At 65%, 35%, and 15%
+remaining hull, the area nearest the damaging hit becomes scorched, small armor
+fragments fly away, and breach fires appear. The hull remains visible and ship
+performance degrades. Only total destruction makes the large hull sections break
+away. Debris spins and drifts for a limited time; tactical pause freezes its motion.
+Repairing a surviving ship clears the scorches and fires and restores its stats.
 
 This is section-based breakup rather than arbitrary slicing at every impact. It
 preserves the supplied meshes and textures while avoiding mesh generation during

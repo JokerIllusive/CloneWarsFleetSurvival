@@ -13,11 +13,32 @@ namespace FleetSurvival
         public int Cost, Salvage;
     }
 
+    public struct FlightHandling
+    {
+        public float Acceleration, Braking, TurnRate;
+        public FlightHandling(float acceleration,float braking,float turnRate)
+        { Acceleration=acceleration; Braking=braking; TurnRate=turnRate; }
+    }
+
     public static class FleetRules
     {
         public const int FleetLimit = 22;
         public const float ArenaRadius = 76;
         public const int StartingSalvage = 220;
+
+        public static FlightHandling Handling(ShipClass kind)
+        {
+            switch(kind)
+            {
+                case ShipClass.Flagship: return new FlightHandling(.85f,1.6f,22);
+                case ShipClass.Carrier: return new FlightHandling(.75f,1.4f,18);
+                case ShipClass.Destroyer: return new FlightHandling(1.4f,2.2f,30);
+                case ShipClass.Frigate: return new FlightHandling(2.2f,3.2f,45);
+                case ShipClass.Escort: return new FlightHandling(3.5f,4.5f,65);
+                case ShipClass.Interceptor: return new FlightHandling(12,16,200);
+                default: return new FlightHandling(8,12,150);
+            }
+        }
 
         public static ShipStats Stats(Faction faction, ShipClass kind)
         {

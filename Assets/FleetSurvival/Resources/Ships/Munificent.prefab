@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 60508315888896884}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.0805186, y: 0.5622832, z: -0.53266835}
+  m_LocalPosition: {x: 1.080518, y: 0.5622832, z: 0.532668}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -101,6 +101,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: d651009c1a210b3459937d4a262ed308, type: 2}
+  - {fileID: 4300000, guid: 54f0b609626e9ed45905bde0cf9e0227, type: 2}
+  - {fileID: 4300000, guid: 03ec0a941ac2e484b85723fa4ecb7220, type: 2}
+  - {fileID: 4300000, guid: 2e05d15852bccf34db5aad41ede34840, type: 2}
+  - {fileID: 4300000, guid: dddda0f90f12c5f459b42575352cf84b, type: 2}
+  - {fileID: 4300000, guid: b82b4a1b95114cd4c85d70b6593cc5f2, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  FragmentCenters:
+  - {x: 0.1234926, y: -0.04343623, z: -1.3111745}
+  - {x: 0.37759125, y: 0.31435984, z: -1.491333}
+  - {x: -0.5182572, y: -0.07708442, z: -0.51978135}
+  - {x: 0.6897161, y: 0.18943289, z: -0.5717473}
+  - {x: -0.686247, y: 0.030534804, z: 0.82112896}
+  - {x: 0.13916364, y: 0.29990426, z: 0.5688079}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &425177971687463969
 GameObject:
   m_ObjectHideFlags: 0
@@ -166,7 +184,7 @@ Transform:
   m_GameObject: {fileID: 1435367366924256691}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.545475, y: 0.52226293, z: 3.26154}
+  m_LocalPosition: {x: 0.5718778, y: 1.027477, z: 2.4374049}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -203,6 +221,10 @@ MeshRenderer:
   - {fileID: 2100000, guid: ee9957a7b5e5b524fab0bd2e0a5bc419, type: 2}
   - {fileID: 2100000, guid: b78fd5b400fea9c419a706786ee6c4b7, type: 2}
   - {fileID: 2100000, guid: 6aaabd1cf48b1a1498af56a9f2ed01f6, type: 2}
+  - {fileID: 2100000, guid: 6603f34c03ca11f46ac39ba32f7f8dfa, type: 2}
+  - {fileID: 2100000, guid: d27e860bf1727c94fb2a7540d1d15f64, type: 2}
+  - {fileID: 2100000, guid: 66363773a28ff2946819ba0a74380da3, type: 2}
+  - {fileID: 2100000, guid: a2d34a1f244c698418ad12d3f3ad1bcb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -236,6 +258,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 4300000, guid: eccf599760a439646b920e75562e29c7, type: 2}
+  - {fileID: 4300000, guid: d465c399d22708742857ff544c35cd5e, type: 2}
+  - {fileID: 4300000, guid: 9cd035d24f11d1b468dace246d3892ec, type: 2}
+  - {fileID: 4300000, guid: 534651dfd9469184e8a0b52427675c4f, type: 2}
+  - {fileID: 4300000, guid: afd5594698c60c94ca2f3b867cc91989, type: 2}
+  - {fileID: 4300000, guid: 383c26fdf0455734cb0bd487efd86dee, type: 2}
+  FragmentCenters:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: -0.28957283, y: -0.21756613, z: -0.47542453}
+  - {x: 0.16137362, y: -0.08351469, z: -0.377698}
+  - {x: -0.30965513, y: 0.007875085, z: 0.17218268}
+  - {x: 0.3559697, y: -0.12920666, z: 0.6352409}
+  - {x: -0.27901852, y: -0.1504767, z: 1.7506719}
+  - {x: 0.21849373, y: -0.21445948, z: 1.8109605}
 --- !u!1 &3665576148547725976
 GameObject:
   m_ObjectHideFlags: 0
@@ -264,7 +304,7 @@ Transform:
   m_GameObject: {fileID: 3665576148547725976}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.57187814, y: 1.0274769, z: -2.437405}
+  m_LocalPosition: {x: -0.54547477, y: 0.52226293, z: -3.2615407}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -301,10 +341,6 @@ MeshRenderer:
   - {fileID: 2100000, guid: ee9957a7b5e5b524fab0bd2e0a5bc419, type: 2}
   - {fileID: 2100000, guid: b78fd5b400fea9c419a706786ee6c4b7, type: 2}
   - {fileID: 2100000, guid: 6aaabd1cf48b1a1498af56a9f2ed01f6, type: 2}
-  - {fileID: 2100000, guid: 6603f34c03ca11f46ac39ba32f7f8dfa, type: 2}
-  - {fileID: 2100000, guid: d27e860bf1727c94fb2a7540d1d15f64, type: 2}
-  - {fileID: 2100000, guid: 66363773a28ff2946819ba0a74380da3, type: 2}
-  - {fileID: 2100000, guid: a2d34a1f244c698418ad12d3f3ad1bcb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -338,6 +374,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 127d7c7db142bfa4e9eb5ceb1d43acec, type: 2}
+  - {fileID: 4300000, guid: e5eff3fbae3734544a144cc64db5e448, type: 2}
+  - {fileID: 4300000, guid: 0ce6fdd43b0045343a479dbb3c97e9b6, type: 2}
+  - {fileID: 4300000, guid: 288f61a1f86004d4d831f7b8f6b14cc7, type: 2}
+  - {fileID: 4300000, guid: 36cbda15f7e6f2943a74564f2a71e214, type: 2}
+  - {fileID: 4300000, guid: 7437526db80725e4d810a4efb1a0afc0, type: 2}
+  - {fileID: 4300000, guid: de842f5a8bae56447aa233c6e6216c81, type: 2}
+  - {fileID: 4300000, guid: 71b80d51211bada43869b215a9e76261, type: 2}
+  FragmentCenters:
+  - {x: -0.0871765, y: 0.29879636, z: -0.99263954}
+  - {x: 0.13030966, y: 0.3243453, z: -1.2606614}
+  - {x: -0.11900222, y: 0.3748996, z: 0.05245757}
+  - {x: 0.112221, y: 0.06744686, z: 0.10012126}
+  - {x: -0.1620279, y: 0.4053109, z: 0.586205}
+  - {x: 0.0701825, y: 0, z: 0.106036186}
+  - {x: -0.1620279, y: 0.40727767, z: 1.1725757}
+  - {x: 0.073063314, y: 0, z: 0.72547126}
 --- !u!1 &6563880626256048184
 GameObject:
   m_ObjectHideFlags: 0
@@ -366,7 +420,7 @@ Transform:
   m_GameObject: {fileID: 6563880626256048184}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.58462447, y: 1.0274769, z: -2.4374046}
+  m_LocalPosition: {x: 0.545475, y: 0.52226293, z: -3.2615407}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -403,10 +457,6 @@ MeshRenderer:
   - {fileID: 2100000, guid: ee9957a7b5e5b524fab0bd2e0a5bc419, type: 2}
   - {fileID: 2100000, guid: b78fd5b400fea9c419a706786ee6c4b7, type: 2}
   - {fileID: 2100000, guid: 6aaabd1cf48b1a1498af56a9f2ed01f6, type: 2}
-  - {fileID: 2100000, guid: 6603f34c03ca11f46ac39ba32f7f8dfa, type: 2}
-  - {fileID: 2100000, guid: d27e860bf1727c94fb2a7540d1d15f64, type: 2}
-  - {fileID: 2100000, guid: 66363773a28ff2946819ba0a74380da3, type: 2}
-  - {fileID: 2100000, guid: a2d34a1f244c698418ad12d3f3ad1bcb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -440,6 +490,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 6be32aba75e017c4c951a6394f4479c8, type: 2}
+  - {fileID: 4300000, guid: fbdefa06a6d19b64988e7a0da36dfb38, type: 2}
+  - {fileID: 4300000, guid: 01b47a628a7cbd84b8c049a1a5d50993, type: 2}
+  - {fileID: 4300000, guid: ef533c5ef1a015846b792177df2d7dba, type: 2}
+  - {fileID: 4300000, guid: e04fcc30455d36a4381ef44c71ff3023, type: 2}
+  - {fileID: 4300000, guid: a047fb8ecd1fbe2499e4d692f7e487df, type: 2}
+  - {fileID: 4300000, guid: 610444c735e88aa4c9f942a8a8a2549e, type: 2}
+  - {fileID: 4300000, guid: 7cda685449cec3946b0e0986df5f79b9, type: 2}
+  FragmentCenters:
+  - {x: -0.13030843, y: 0.3243453, z: -1.2606614}
+  - {x: 0.08717731, y: 0.29879636, z: -0.99263954}
+  - {x: -0.112220585, y: 0.06744686, z: 0.10012126}
+  - {x: 0.1190027, y: 0.3748996, z: 0.05245793}
+  - {x: -0.070182025, y: 0, z: 0.106036186}
+  - {x: 0.16202837, y: 0.4053109, z: 0.58620536}
+  - {x: -0.073063254, y: 0, z: 0.72547126}
+  - {x: 0.16202837, y: 0.40727767, z: 1.1725764}
 --- !u!1 &6683279468826610654
 GameObject:
   m_ObjectHideFlags: 0
@@ -468,7 +536,7 @@ Transform:
   m_GameObject: {fileID: 6683279468826610654}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.0805182, y: 0.5622832, z: -0.53266835}
+  m_LocalPosition: {x: -1.0805185, y: 0.5622832, z: 0.5326679}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -541,6 +609,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 4300000, guid: 140031aeaf53bb04eac38b8ae8e04931, type: 2}
+  - {fileID: 4300000, guid: 231de2c6a043b414bbd674d0f6c6d61e, type: 2}
+  - {fileID: 4300000, guid: dc83c29ef2b250b478f05defe86c24b5, type: 2}
+  - {fileID: 4300000, guid: c003f3372d2793f47a00cae56a1666a6, type: 2}
+  - {fileID: 4300000, guid: be8938e46a7e4f749b17e6ada1c1e916, type: 2}
+  - {fileID: 4300000, guid: ff320561fffdeb241a62d8078d00124b, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  FragmentCenters:
+  - {x: -0.3775909, y: 0.31435984, z: -1.4913334}
+  - {x: -0.12310076, y: -0.04343623, z: -1.3111743}
+  - {x: -0.68971604, y: 0.18943289, z: -0.57174754}
+  - {x: 0.51979077, y: -0.07708442, z: -0.5197811}
+  - {x: -0.13916367, y: 0.29990426, z: 0.5688081}
+  - {x: 0.6862465, y: 0.030534744, z: 0.8211287}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &9112741056054173664
 GameObject:
   m_ObjectHideFlags: 0
@@ -569,7 +655,7 @@ Transform:
   m_GameObject: {fileID: 9112741056054173664}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.54586667, y: 0.52226293, z: 3.26154}
+  m_LocalPosition: {x: -0.5846245, y: 1.027477, z: 2.4374044}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -606,6 +692,10 @@ MeshRenderer:
   - {fileID: 2100000, guid: ee9957a7b5e5b524fab0bd2e0a5bc419, type: 2}
   - {fileID: 2100000, guid: b78fd5b400fea9c419a706786ee6c4b7, type: 2}
   - {fileID: 2100000, guid: 6aaabd1cf48b1a1498af56a9f2ed01f6, type: 2}
+  - {fileID: 2100000, guid: 6603f34c03ca11f46ac39ba32f7f8dfa, type: 2}
+  - {fileID: 2100000, guid: d27e860bf1727c94fb2a7540d1d15f64, type: 2}
+  - {fileID: 2100000, guid: 66363773a28ff2946819ba0a74380da3, type: 2}
+  - {fileID: 2100000, guid: a2d34a1f244c698418ad12d3f3ad1bcb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -639,3 +729,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41cfa8ae2075bc64894a6e5c7d83e257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ArmorFragments:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 4300000, guid: cf5970b0b497bd746bab048e390745b9, type: 2}
+  - {fileID: 4300000, guid: 311a1c9bbf9d3ff428a6487e19fe0229, type: 2}
+  - {fileID: 4300000, guid: 64f474ae9dd68144ea431a3e199ffdc9, type: 2}
+  - {fileID: 4300000, guid: 0ba115336df423f4ab31147404144003, type: 2}
+  - {fileID: 4300000, guid: e059ca002aa6dca418a17218cd2f57bd, type: 2}
+  - {fileID: 4300000, guid: 17686af7aff8daa428a8cee8b8fa5cd2, type: 2}
+  FragmentCenters:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: -0.14862776, y: -0.08351469, z: -0.37016696}
+  - {x: 0.28957272, y: -0.21756613, z: -0.47542453}
+  - {x: -0.34322384, y: -0.12920666, z: 0.6352414}
+  - {x: 0.32240093, y: 0.007875085, z: 0.17218316}
+  - {x: -0.21119383, y: -0.22759199, z: 1.810961}
+  - {x: 0.28136593, y: -0.1504767, z: 1.7506723}

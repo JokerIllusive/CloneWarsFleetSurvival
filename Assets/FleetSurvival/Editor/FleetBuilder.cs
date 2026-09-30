@@ -93,6 +93,33 @@ namespace FleetSurvival.Editor
             RenderTexture.active=null; camera.targetTexture=null; target.Release(); UnityEngine.Object.DestroyImmediate(target); UnityEngine.Object.DestroyImmediate(image);
             Debug.Log("COMPLETE_FLEET_PREVIEW_READY");
         }
+        public static void PreviewForwardDirections()
+        {
+            EnsureResources();
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            RenderSettings.ambientLight=new Color(.5f,.55f,.6f); RenderSettings.skybox=null;
+            var key=new GameObject("Direction preview key",typeof(Light)).GetComponent<Light>(); key.type=LightType.Directional; key.intensity=1.5f; key.transform.rotation=Quaternion.Euler(65,-30,0);
+            var camera=new GameObject("Top-down forward preview",typeof(Camera)).GetComponent<Camera>();
+            camera.clearFlags=CameraClearFlags.SolidColor; camera.backgroundColor=new Color(.015f,.02f,.03f); camera.orthographic=true;
+            camera.orthographicSize=55; camera.aspect=.8f; camera.transform.position=new Vector3(0,180,0); camera.transform.LookAt(Vector3.zero,Vector3.forward); camera.farClipPlane=400;
+            string[] names={"Venator","VenatorDetailed","Acclamator","Arquitens","ARC170","V19Torrent","Providence","Munificent","Recusant","Lucrehulk","Vulture"};
+            var font=Resources.Load<TMP_FontAsset>("CommanderFont");
+            for(int i=0;i<names.Length;i++)
+            {
+                Vector3 position=new Vector3(-28+(i%3)*28,0,38-(i/3)*25);
+                var model=UnityEngine.Object.Instantiate(Resources.Load<GameObject>("Ships/"+names[i])); model.transform.position=position;
+                if(i==3 || i==7) model.transform.localScale=Vector3.one*1.4f;
+                if(i==4 || i==5 || i==10) model.transform.localScale=Vector3.one*2.6f;
+                var arrow=new GameObject("Forward +Z",typeof(LineRenderer)).GetComponent<LineRenderer>();
+                arrow.sharedMaterial=ShipVisuals.Material(new Color(.1f,1,.4f),true); arrow.startWidth=arrow.endWidth=.13f; arrow.positionCount=5;
+                arrow.SetPositions(new[]{position+new Vector3(10,3,-6),position+new Vector3(10,3,6),position+new Vector3(9,3,4),position+new Vector3(10,3,6),position+new Vector3(11,3,4)});
+                Label(names[i]+" / green arrow = forward",position+new Vector3(0,0,-11),.48f,Color.white,camera,font);
+            }
+            var target=new RenderTexture(1920,2400,24); camera.targetTexture=target; camera.Render(); RenderTexture.active=target;
+            var image=new Texture2D(1920,2400,TextureFormat.RGB24,false); image.ReadPixels(new Rect(0,0,1920,2400),0,0); image.Apply();
+            File.WriteAllBytes(Path.GetFullPath(Path.Combine(Application.dataPath,"../../Ship-forward-preview.png")),image.EncodeToPNG());
+            RenderTexture.active=null; camera.targetTexture=null; target.Release(); UnityEngine.Object.DestroyImmediate(target); UnityEngine.Object.DestroyImmediate(image);
+        }
         static void PrepareModel(string file,string name,float length)
         {
             string source="Assets/FleetSurvival/Models/"+file;
@@ -106,7 +133,9 @@ namespace FleetSurvival.Editor
             foreach(var renderer in renderers) bounds.Encapsulate(renderer.bounds);
             if(bounds.size.x>bounds.size.z && bounds.size.x>bounds.size.y) model.transform.localRotation=Quaternion.Euler(0,90,0)*model.transform.localRotation;
             else if(bounds.size.y>bounds.size.z) model.transform.localRotation=Quaternion.Euler(90,0,0)*model.transform.localRotation;
-            model.transform.localRotation=Quaternion.Euler(0,180,0)*model.transform.localRotation;
+            // These assets have different authored noses, including sideways fighter meshes.
+            float forwardYaw=name=="Venator" || name=="Lucrehulk"?180:name=="ARC170" || name=="V19Torrent"?270:0;
+            model.transform.localRotation=Quaternion.Euler(0,forwardYaw,0)*model.transform.localRotation;
             bounds=renderers[0].bounds; foreach(var renderer in renderers) bounds.Encapsulate(renderer.bounds);
             Debug.Log("MODEL_READY "+name+" sourceBounds="+bounds+" renderers="+renderers.Length);
             float factor=length/Mathf.Max(bounds.size.x,bounds.size.y,bounds.size.z);
@@ -264,5 +293,7 @@ namespace FleetSurvival.Editor
             Debug.Log("FLEET_BUILD_RESULT "+report.summary.result);
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded) throw new Exception("Windows game build failed.");
         }
+        public static void BuildAndPreview()
+        { Build(); PreviewForwardDirections(); }
     }
 }

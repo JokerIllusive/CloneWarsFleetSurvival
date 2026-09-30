@@ -14,6 +14,8 @@ namespace FleetSurvival
         public FleetShip ForcedTarget;
         public LineRenderer SelectionRing;
         public ShipDestruction Destruction { get; private set; }
+        public FleetFormation Formation { get; set; }
+        public float CurrentSpeed { get; private set; }
         float cooldown, lastHit = -100;
         public bool Alive => Hull > 0;
 
@@ -45,10 +47,12 @@ namespace FleetSurvival
             bool inRange=distance<=Stats.Range;
             Vector3 desired=transform.position;
             bool move=false;
+            if(!HasMoveOrder || ForcedTarget!=null) Formation=null;
             if(HasMoveOrder && !(AttackMove && inRange))
             {
-                desired=Destination; move=true;
-                if(Vector3.Distance(desired,transform.position)<1.2f) HasMoveOrder=false;
+                desired=Formation!=null?Formation.Slot(this):Destination; move=true;
+                if((Formation==null || Formation.Arrived) && Vector3.Distance(desired,transform.position)<.9f && CurrentSpeed<.25f)
+                { HasMoveOrder=false; Formation=null; move=false; }
             }
             else if(target!=null)
             {
@@ -61,34 +65,45 @@ namespace FleetSurvival
                     move=true;
                 }
             }
-            if(move)
-            {
-                Vector3 direction=(desired-transform.position).normalized;
-                Vector3 separation=Vector3.zero;
-                foreach(var other in Game.Ships)
-                {
-                    if(other==null || other==this || !other.Alive) continue;
-                    Vector3 delta=transform.position-other.transform.position;
-                    float gap=Stats.Radius+other.Stats.Radius+.8f;
-                    if(delta.sqrMagnitude<gap*gap && delta.sqrMagnitude>.001f)
-                        separation+=delta.normalized*(1-delta.magnitude/gap)*2.2f;
-                }
-                Vector3 step=(direction+separation).normalized*Stats.Speed*Destruction.Mobility*dt;
-                if((desired-transform.position).sqrMagnitude>step.sqrMagnitude) transform.position+=step;
-                Vector3 clamped=transform.position; clamped.y=0;
-                if(clamped.magnitude>FleetRules.ArenaRadius) clamped=clamped.normalized*FleetRules.ArenaRadius;
-                transform.position=clamped;
-                if(step.sqrMagnitude>.00001f) transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(step),dt*4);
-            }
-            else if(target!=null)
-            {
-                Vector3 heading=target.transform.position-transform.position;
-                if(heading.sqrMagnitude>.01f) transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(heading),dt*2);
-            }
+            FlyTowards(desired,move,dt);
             if(inRange && cooldown<=0 && Game.Phase==BattlePhase.Combat)
             {
                 Game.Fire(this,target,Stats.Damage*Destruction.Firepower); cooldown=Stats.Interval;
             }
+        }
+
+        void FlyTowards(Vector3 destination,bool move,float dt)
+        {
+            var handling=FleetRules.Handling(Kind);
+            Vector3 delta=destination-transform.position; delta.y=0;
+            float distance=delta.magnitude;
+            float desiredSpeed=0;
+            if(move && distance>.15f)
+            {
+                Vector3 direction=delta/distance;
+                Vector3 separation=Vector3.zero;
+                foreach(var other in Game.Ships)
+                {
+                    if(other==null || other==this || !other.Alive) continue;
+                    Vector3 away=transform.position-other.transform.position;
+                    float gap=Stats.Radius+other.Stats.Radius+.8f;
+                    float squared=away.sqrMagnitude;
+                    if(squared<gap*gap && squared>.001f)
+                        separation+=away.normalized*(1-Mathf.Sqrt(squared)/gap)*1.8f;
+                }
+                Vector3 heading=(direction+separation).normalized;
+                if(heading.sqrMagnitude>.001f)
+                    transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(heading),handling.TurnRate*dt);
+                float alignment=Mathf.Clamp01((Vector3.Dot(transform.forward,heading)+.3f)/1.3f);
+                float maximum=Stats.Speed*Destruction.Mobility;
+                desiredSpeed=Mathf.Min(maximum,Mathf.Sqrt(2*handling.Braking*Mathf.Max(0,distance-.65f)))*alignment;
+            }
+            float change=desiredSpeed<CurrentSpeed?handling.Braking:handling.Acceleration*Destruction.Mobility;
+            CurrentSpeed=Mathf.MoveTowards(CurrentSpeed,desiredSpeed,change*dt);
+            Vector3 position=transform.position+transform.forward*CurrentSpeed*dt; position.y=0;
+            float boundary=FleetRules.ArenaRadius-Stats.Radius;
+            if(position.magnitude>boundary) { position=position.normalized*boundary; CurrentSpeed=0; }
+            transform.position=position;
         }
 
         public void Damage(float amount) => Damage(amount,transform.position+transform.forward*Stats.Radius);
@@ -102,7 +117,9 @@ namespace FleetSurvival
         }
 
         public void MoveTo(Vector3 destination, bool attackMove=false)
-        { Destination=destination; HasMoveOrder=true; AttackMove=attackMove; ForcedTarget=null; }
+        { destination.y=0; Destination=Vector3.ClampMagnitude(destination,FleetRules.ArenaRadius-Stats.Radius-1); HasMoveOrder=true; AttackMove=attackMove; ForcedTarget=null; Formation=null; }
+        public void AttackTarget(FleetShip target)
+        { ForcedTarget=target; HasMoveOrder=false; AttackMove=false; Formation=null; }
     }
 
     public sealed class FleetBolt : MonoBehaviour
