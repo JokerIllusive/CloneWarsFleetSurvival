@@ -30,20 +30,20 @@ namespace FleetSurvival
             if(clips.TryGetValue(name,out var ready)) return ready;
             var supplied=Resources.Load<AudioClip>("Audio/"+name);
             if(supplied!=null) { clips[name]=supplied; return supplied; }
-            bool heavy=name.Contains("Heavy"),cis=name.Contains("CIS"),jump=name.Contains("Hyperspace"),explosion=name=="Explosion";
-            float duration=explosion?1.3f:jump?1.1f:heavy?.36f:.19f;
+            bool heavy=name.Contains("Heavy"),cis=name.Contains("CIS"),jump=name.Contains("Hyperspace"),explosion=name=="Explosion",torpedo=name=="StrikeLaunch";
+            float duration=torpedo?.55f:explosion?1.3f:jump?1.1f:heavy?.36f:.19f;
             int rate=44100,count=(int)(rate*duration); var samples=new float[count];
             var random=new System.Random(name.GetHashCode()); double phase=0,secondary=0; float filtered=0;
             for(int i=0;i<count;i++)
             {
                 float t=i/(float)rate,u=t/duration;
-                float frequency=jump?Mathf.Lerp(1800,70,Mathf.Pow(u,.45f)):explosion?Mathf.Lerp(120,22,u):Mathf.Lerp(heavy?(cis?540:660):(cis?1350:1650),heavy?55:130,Mathf.Pow(u,.32f));
+                float frequency=torpedo?Mathf.Lerp(220,42,u):jump?Mathf.Lerp(1800,70,Mathf.Pow(u,.45f)):explosion?Mathf.Lerp(120,22,u):Mathf.Lerp(heavy?(cis?540:660):(cis?1350:1650),heavy?55:130,Mathf.Pow(u,.32f));
                 phase+=frequency/rate*2*Math.PI; secondary+=(frequency*1.51+35)/rate*2*Math.PI;
                 float noise=(float)random.NextDouble()*2-1; filtered=Mathf.Lerp(filtered,noise,explosion?.14f:.35f);
                 float envelope=Mathf.Min(1,t/.003f)*Mathf.Exp(-u*(jump?3:explosion?4:7))*Mathf.Clamp01((1-u)*15);
                 float metallic=(float)(Math.Sin(phase)+.35*Math.Sin(secondary)+.15*Math.Sin(phase*3.7));
                 float crack=i<rate*.022f?noise*Mathf.Exp(-t*100)*.6f:0;
-                float sample=explosion?filtered*1.1f+metallic*.16f:jump?filtered*.7f+metallic*.24f:metallic*.45f+filtered*.28f+crack;
+                float sample=torpedo?filtered*.85f+metallic*.23f+crack*.3f:explosion?filtered*1.1f+metallic*.16f:jump?filtered*.7f+metallic*.24f:metallic*.45f+filtered*.28f+crack;
                 samples[i]=(float)Math.Tanh(sample*1.4f)*envelope*.75f;
             }
             ready=AudioClip.Create(name,count,1,rate,false); ready.SetData(samples,0); clips[name]=ready; return ready;

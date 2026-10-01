@@ -10,6 +10,7 @@ namespace FleetSurvival
         readonly List<Vector3> mounts=new List<Vector3>();
         FleetShip ship;
         public int BarrelCount => mounts.Count;
+        public void Clear() {queued.Clear();}
         public Color BoltColor => ship.Faction==Faction.Republic?new Color(.12f,.52f,1):new Color(1,.08f,.025f);
         public void Initialize(FleetShip owner)
         {
@@ -18,7 +19,7 @@ namespace FleetSurvival
             {
                 float wing=ship.Faction==Faction.Republic && ship.Kind==ShipClass.Fighter?1.65f:.8f;
                 foreach(var offset in FleetSquadron.Offsets)
-                { mounts.Add(offset+new Vector3(-wing,.45f,.7f)*FleetSquadron.CraftScale); mounts.Add(offset+new Vector3(wing,.45f,.7f)*FleetSquadron.CraftScale); }
+                { if(ship.Role==SquadronRole.Strike) mounts.Add(offset+new Vector3(0,.3f,1)*FleetSquadron.CraftScale);else {mounts.Add(offset+new Vector3(-wing,.45f,.7f)*FleetSquadron.CraftScale); mounts.Add(offset+new Vector3(wing,.45f,.7f)*FleetSquadron.CraftScale);} }
                 return;
             }
             if(ship.Faction==Faction.CIS && ship.Kind==ShipClass.Carrier)
@@ -38,11 +39,14 @@ namespace FleetSurvival
         void Twin(Vector3 position) { mounts.Add(position+Vector3.left*.12f); mounts.Add(position+Vector3.right*.12f); }
         public void FireVolley(FleetShip target,float damage)
         {
-            if(target==null || !target.Alive || target.IsArriving || queued.Count>0) return;
-            int barrels=ship.Squadron!=null?ship.Squadron.ActiveCount*2:mounts.Count;
+            if(target==null || !target.Targetable || queued.Count>0) return;
+            int barrels=ship.Squadron!=null?ship.Squadron.ActiveCount*(ship.Role==SquadronRole.Strike?1:2):mounts.Count;
             if(barrels==0) return;
             for(int i=0;i<mounts.Count;i++)
-                if(ship.Squadron==null || ship.Squadron.IsActive(i/2)) queued.Add(new Shot{Origin=mounts[i],Delay=i*.018f,Damage=damage/barrels,Target=target,Fighter=i/2});
+            {
+                int craft=ship.Role==SquadronRole.Strike?i:i/2;
+                if(ship.Squadron==null || ship.Squadron.IsActive(craft)) queued.Add(new Shot{Origin=mounts[i],Delay=i*.018f,Damage=damage/barrels,Target=target,Fighter=craft});
+            }
         }
         public void Tick(float dt)
         {
@@ -51,7 +55,7 @@ namespace FleetSurvival
                 var shot=queued[i]; shot.Delay-=dt;
                 if(shot.Delay>0) { queued[i]=shot; continue; }
                 queued.RemoveAt(i);
-                if(shot.Target==null || !shot.Target.Alive || shot.Target.IsArriving) continue;
+                if(shot.Target==null || !shot.Target.Targetable) continue;
                 if(ship.Squadron!=null && !ship.Squadron.IsActive(shot.Fighter)) continue;
                 Vector3 muzzle=ship.Squadron!=null?ship.Squadron.Muzzle(shot.Fighter,(shot.Origin-FleetSquadron.Offsets[shot.Fighter])/FleetSquadron.CraftScale):transform.TransformPoint(shot.Origin);
                 ship.Game.SpawnBolt(ship,shot.Target,shot.Damage,muzzle,BoltColor);

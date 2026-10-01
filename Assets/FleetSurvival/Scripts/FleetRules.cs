@@ -1,10 +1,13 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace FleetSurvival
 {
     public enum Faction { Republic, CIS }
     public enum ShipClass { Flagship, Frigate, Fighter, Destroyer, Interceptor, Escort, Carrier }
     public enum BattlePhase { Menu, Preparation, Combat, Defeat }
+    public enum SquadronRole { Fighter, Interceptor, Strike }
+    public struct WaveEntry {public ShipClass Kind;public SquadronRole? Role;}
 
     public struct ShipStats
     {
@@ -27,6 +30,30 @@ namespace FleetSurvival
         public const int StartingSalvage = 220;
         public const int MaxWeaponRefits = 10;
         public const float WeaponRefitStep = .1f;
+        public static ShipClass EnemyClass(int wave,int index,int budget,out int cost)
+        {
+            if(wave>=6 && budget>=6 && index%4==0) {cost=6;return ShipClass.Carrier;}
+            if(wave>=3 && budget>=5 && index%3==0) {cost=5;return ShipClass.Destroyer;}
+            if(wave>=4 && budget>=2 && index%4==1) {cost=2;return ShipClass.Escort;}
+            if(budget>=3 && (index%3==0 || wave>=4 && index%2==0)) {cost=3;return ShipClass.Frigate;}
+            cost=1;return index%2==0?ShipClass.Interceptor:ShipClass.Fighter;
+        }
+        public static SquadronRole? EnemyRole(int wave,int index,ShipClass kind)
+        {return kind==ShipClass.Fighter && wave>=3 && index%3==2?(SquadronRole?)SquadronRole.Strike:null;}
+        public static List<WaveEntry> WavePlan(int wave)
+        {
+            var plan=new List<WaveEntry>();int budget=WaveBudget(wave),index=0;
+            if(wave%5==0) {plan.Add(new WaveEntry{Kind=ShipClass.Flagship});index++;}
+            while(budget>0) {var kind=EnemyClass(wave,index,budget,out int cost);plan.Add(new WaveEntry{Kind=kind,Role=EnemyRole(wave,index,kind)});budget-=cost;index++;}
+            return plan;
+        }
+        public static int LaunchCost(SquadronRole role) => role==SquadronRole.Strike?75:role==SquadronRole.Interceptor?45:55;
+        public static ShipStats SquadronStats(Faction faction,ShipClass kind,SquadronRole role)
+        {
+            var stats=Stats(faction,kind);
+            if(role==SquadronRole.Strike) {stats.Name=faction==Faction.Republic?"ARC-170 strike squadron":"Vulture strike squadron";stats.Damage*=2;stats.Interval=1.6f;stats.Range=22;stats.Speed=16;}
+            return stats;
+        }
         public static int Capacity(Faction faction,ShipClass kind)
         {
             switch(kind)

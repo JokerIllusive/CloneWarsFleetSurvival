@@ -58,5 +58,15 @@ namespace FleetSurvival
             ActiveCount=6;
             for(int i=0;i<6;i++) { hull[i]=ship.MaxHull/6; fighters[i].gameObject.SetActive(true); }
         }
+        public void RestoreOne()
+        {
+            for(int i=0;i<6;i++) if(!IsActive(i))
+            {hull[i]=ship.MaxHull/6;ActiveCount++;ship.Hull=Mathf.Min(ship.MaxHull,ship.Hull+hull[i]);fighters[i].gameObject.SetActive(true);fighters[i].localPosition=Offsets[i];fighters[i].localRotation=Quaternion.identity;return;}
+        }
+        public void RepairLiving(float amount)
+        {
+            for(int i=0;i<6 && amount>0;i++) if(IsActive(i))
+            {float repair=Mathf.Min(amount,ship.MaxHull/6-hull[i]);hull[i]+=repair;ship.Hull=Mathf.Min(ship.MaxHull,ship.Hull+repair);amount-=repair;}
+        }
     }
 }

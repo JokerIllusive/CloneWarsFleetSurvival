@@ -17,6 +17,12 @@ namespace FleetSurvival
         UnityEngine.UI.GridLayoutGroup cardGrid;
         readonly RectTransform[] viewEdges=new RectTransform[4];
         GameObject controls;
+        GameObject hangarPanel;
+        TextMeshProUGUI hangarReadout;
+        readonly UnityEngine.UI.Button[] hangarLaunch=new UnityEngine.UI.Button[3],hangarBays=new UnityEngine.UI.Button[3];
+        UnityEngine.UI.Button recoverSquad,relaunchSquad;
+        FleetHangar displayedHangar;
+        public string HangarDetails => hangarReadout.text;
         public bool ControlsVisible => controls.activeSelf;
         GameObject menu, battle, paused, defeat, credits;
         TextMeshProUGUI resources, wave, contacts, message, selected, flagStatus, phase, best, endReport, muteLabel, unitDetails, unitRefit, tallyWave, tallyRun;
@@ -104,12 +110,12 @@ namespace FleetSurvival
             hullBar=Bar(command,"Hull",new Vector2(16,-87),new Vector2(248,6),new Color(.35f,.86f,.65f));
             shieldBar=Bar(command,"Shields",new Vector2(16,-100),new Vector2(248,4),cyan);
             Text(command,"[Q] focus command ship",new Vector2(0,0),new Vector2(16,9),new Vector2(248,20),15,mutedText);
-            var selection=Panel(screen,"Selection",new Vector2(0,1),new Vector2(18,-240),new Vector2(280,244),panelColor);
+            var selection=Panel(screen,"Selection",new Vector2(0,1),new Vector2(18,-240),new Vector2(280,264),panelColor);
             selected=Text(selection,"1 ship selected",new Vector2(0,1),new Vector2(16,-12),new Vector2(248,44),20,ink);
             unitDetails=Text(selection,"Select a friendly unit to inspect it.",new Vector2(0,1),new Vector2(16,-63),new Vector2(248,88),17,ink);
-            unitRefit=Text(selection,"",new Vector2(0,1),new Vector2(16,-156),new Vector2(248,42),15,cyan);
+            unitRefit=Text(selection,"",new Vector2(0,1),new Vector2(16,-156),new Vector2(248,60),14,cyan);
             Button(selection,"SELECT FLEET [TAB]",new Vector2(0,0),new Vector2(16,10),new Vector2(248,30),()=>game.SelectAll()).GetComponentInChildren<TextMeshProUGUI>().fontSize=16;
-            var tally=Panel(screen,"Battle tally",new Vector2(0,1),new Vector2(18,-496),new Vector2(280,144),panelColor);
+            var tally=Panel(screen,"Battle tally",new Vector2(0,1),new Vector2(18,-516),new Vector2(280,144),panelColor);
             Text(tally,"BATTLE TALLY",new Vector2(0,1),new Vector2(16,-12),new Vector2(145,24),16,cyan);
             Text(tally,"WAVE    RUN",new Vector2(1,1),new Vector2(-14,-14),new Vector2(108,20),14,mutedText,TextAlignmentOptions.TopRight);
             Text(tally,"Enemy capitals\nEnemy fighters\nFriendly capitals lost\nFriendly fighters lost",new Vector2(0,1),new Vector2(16,-43),new Vector2(183,90),16,ink);
@@ -124,6 +130,7 @@ namespace FleetSurvival
             var help=Panel(screen,"Controls",new Vector2(1,1),new Vector2(-18,-334),new Vector2(300,259),panelColor);controls=help.gameObject;
             Text(help,"FLEET ORDERS [H / ?]",new Vector2(0,1),new Vector2(18,-15),new Vector2(264,28),17,cyan);
             Text(help,"Left click / drag: select ships\nShift: add to selection\nRight click: move / focus fire\nF then right click: attack-move\nWASD / middle drag: pan\nScroll: zoom     Q: flagship\nSpace / Esc: pause\n1 / 2 / 3: call reinforcements",new Vector2(0,1),new Vector2(18,-55),new Vector2(264,192),17,ink);controls.SetActive(false);
+            BuildHangarPanel(screen);
             var bottom=Panel(screen,"Reinforcements",Vector2.zero,Vector2.zero,new Vector2(1920,190),panelColor);bottom.anchorMax=new Vector2(1,0);bottom.sizeDelta=new Vector2(0,190);
             phase=Text(bottom,"PREPARATION / REINFORCE YOUR FLEET",new Vector2(0,1),new Vector2(20,-12),new Vector2(1490,24),16,cyan);
             cardArea=Rect(bottom,"Fleet requisitions",Vector2.zero,new Vector2(20,37),new Vector2(1492,115));cardArea.anchorMax=new Vector2(1,0);cardArea.sizeDelta=new Vector2(-408,115);
@@ -135,6 +142,45 @@ namespace FleetSurvival
             launch=Button(bottom,"LAUNCH WAVE",new Vector2(1,0),new Vector2(-20,37),new Vector2(348,44),()=>game.LaunchWave());launch.GetComponentInChildren<TextMeshProUGUI>().fontSize=19;
             Text(bottom,"Choose a ship, then click an arrival point. Right-click / Esc cancels.   [H / ?] controls",new Vector2(0,0),new Vector2(20,9),new Vector2(1700,20),15,mutedText);
             message=Text(screen,"Fleet ready.",new Vector2(.5f,1),new Vector2(0,-78),new Vector2(1050,46),19,ink,TextAlignmentOptions.Center);
+        }
+        void BuildHangarPanel(Transform screen)
+        {
+            var panel=Panel(screen,"Hangar operations",new Vector2(1,1),new Vector2(-18,-334),new Vector2(300,367),panelColor);hangarPanel=panel.gameObject;
+            Text(panel,"HANGAR OPERATIONS",new Vector2(0,1),new Vector2(16,-12),new Vector2(268,24),16,cyan);
+            hangarReadout=Text(panel,"",new Vector2(0,1),new Vector2(16,-44),new Vector2(268,62),15,ink);
+            foreach(SquadronRole role in Enum.GetValues(typeof(SquadronRole)))
+            {
+                var type=role;int index=(int)role;
+                string label=role==SquadronRole.Interceptor?"INTERCEPT":role.ToString().ToUpper();
+                hangarLaunch[index]=Button(panel,label+"\n"+FleetRules.LaunchCost(role)+" salvage",new Vector2(0,1),new Vector2(16+index*92,-113),new Vector2(84,55),()=>game.LaunchSelectedSquadron(type));var launchLabel=hangarLaunch[index].GetComponentInChildren<TextMeshProUGUI>();launchLabel.fontSize=13;launchLabel.rectTransform.sizeDelta=new Vector2(78,47);
+            }
+            recoverSquad=Button(panel,"RECOVER [BACKSPACE]",new Vector2(0,1),new Vector2(16,-180),new Vector2(268,34),()=>game.RecoverSelectedSquadron());recoverSquad.GetComponentInChildren<TextMeshProUGUI>().fontSize=14;
+            relaunchSquad=Button(panel,"RELAUNCH SQUADRON",new Vector2(0,1),new Vector2(16,-180),new Vector2(268,34),()=>game.RelaunchSelectedSquadron());relaunchSquad.GetComponentInChildren<TextMeshProUGUI>().fontSize=14;
+            for(int i=0;i<3;i++) {int bay=i;hangarBays[i]=Button(panel,"BAY "+(i+1),new Vector2(0,1),new Vector2(16,-224-i*32),new Vector2(268,27),()=>game.SelectHangarBay(displayedHangar,bay));hangarBays[i].GetComponentInChildren<TextMeshProUGUI>().fontSize=13;}
+            Text(panel,"1 capacity / squad, including docked.\nLost craft: 8 salvage each / 6 seconds.",new Vector2(0,0),new Vector2(16,9),new Vector2(268,38),13,mutedText);
+        }
+        void RefreshHangar(FleetShip unit,bool single)
+        {
+            displayedHangar=single && unit!=null?(unit.Hangar??(unit.Squadron!=null?game.RecoveryHangar(unit):null)):null;
+            hangarPanel.SetActive(displayedHangar!=null && !ControlsVisible);
+            if(displayedHangar==null) return;
+            var hangar=displayedHangar;
+            bool carrierSelected=unit.Hangar==hangar;
+            hangarPanel.GetComponent<RectTransform>().sizeDelta=new Vector2(300,carrierSelected?330:300);
+            string deck=hangar.Cooldown>0?"Deck ready in "+hangar.Cooldown.ToString("0.0")+"s":"Launch deck ready";
+            hangarReadout.text=hangar.Owner.Stats.Name+"\nBays "+hangar.UsedBays+" / "+hangar.Bays+" | "+deck+"\n"+(unit.Docked?"Docked / rearming "+Mathf.Max(0,6-unit.DockTimer).ToString("0.0")+"s":unit.ReturningToHangar?"Returning / vulnerable until docked":"Select a bay below to inspect its squad.");
+            foreach(SquadronRole role in Enum.GetValues(typeof(SquadronRole))) {hangarLaunch[(int)role].gameObject.SetActive(carrierSelected);hangarLaunch[(int)role].interactable=carrierSelected && hangar.CanLaunch(role);}
+            recoverSquad.gameObject.SetActive(!carrierSelected && !unit.Docked);relaunchSquad.gameObject.SetActive(!carrierSelected && unit.Docked);
+            recoverSquad.GetComponent<RectTransform>().anchoredPosition=new Vector2(16,-113);relaunchSquad.GetComponent<RectTransform>().anchoredPosition=new Vector2(16,-113);
+            recoverSquad.interactable=unit.Squadron!=null && unit.Targetable && !unit.ReturningToHangar && hangar.Available;
+            relaunchSquad.interactable=unit.Docked && hangar.Available && hangar.Cooldown<=0 && unit.DockTimer>=6;
+            for(int i=0;i<3;i++)
+            {
+                hangarBays[i].gameObject.SetActive(i<hangar.Bays);
+                hangarBays[i].GetComponent<RectTransform>().anchoredPosition=new Vector2(16,-(carrierSelected?180:153)-i*32);
+                var squad=i<hangar.Squadrons.Count?hangar.Squadrons[i]:null;hangarBays[i].interactable=squad!=null && squad.Alive;
+                hangarBays[i].GetComponentInChildren<TextMeshProUGUI>().text="BAY "+(i+1)+" / "+(squad==null?"EMPTY":squad.Role.ToString().ToUpper()+" "+squad.Squadron.ActiveCount+"/6 • "+(squad.Docked?"DOCKED":squad.ReturningToHangar?"RETURNING":squad.IsArriving?"LAUNCHING":"DEPLOYED"));
+            }
         }
         public void ToggleControls() { controls.SetActive(!controls.activeSelf); }
         public void PanMap(Vector2 screenPosition,Camera eventCamera)
@@ -240,7 +286,7 @@ namespace FleetSurvival
             contacts.rectTransform.sizeDelta=new Vector2(Mathf.Max(300,root.rect.width-contactX-304),30);
             contacts.enableAutoSizing=true;contacts.fontSizeMin=14;contacts.fontSizeMax=18;
             contacts.text="CAPACITY "+game.FleetCapacityUsed+" / "+FleetRules.FleetLimit+"   HOSTILES "+game.EnemyCount+"   INBOUND "+game.IncomingCount; message.text=game.Message;
-            phase.text=game.SelectedReinforcement.HasValue?"HYPERSPACE / CLICK AN ARRIVAL POINT   •   RIGHT-CLICK TO CANCEL":game.Phase==BattlePhase.Preparation ? "PREPARATION / REINFORCEMENTS & FLEET MAINTENANCE" : "ASSAULT / REINFORCEMENTS AVAILABLE";
+            phase.text=game.SelectedReinforcement.HasValue?"HYPERSPACE / CLICK AN ARRIVAL POINT   •   RIGHT-CLICK TO CANCEL":game.Phase==BattlePhase.Preparation ? "PREPARATION / NEXT: "+game.NextWaveBriefing : "ASSAULT / SCREEN YOUR CAPITALS; INTERCEPT ENEMY STRIKE SQUADRONS";
             var ship=game.Flagship;
             if(ship!=null) { flagStatus.text=ship.Stats.Name+"\n"+Mathf.CeilToInt(ship.Hull)+" hull / "+Mathf.CeilToInt(ship.Shield)+" shields"; Fill(hullBar,ship.Hull/ship.MaxHull); Fill(shieldBar,ship.Shield/ship.MaxShield); }
             else { Fill(hullBar,0); Fill(shieldBar,0); }
@@ -248,8 +294,9 @@ namespace FleetSurvival
             if(chosen.Length==1)
             {
                 var unit=chosen[0];
-                unitDetails.text="Hull "+Mathf.CeilToInt(unit.Hull)+" / "+Mathf.CeilToInt(unit.MaxHull)+"\nShields "+Mathf.CeilToInt(unit.Shield)+" / "+Mathf.CeilToInt(unit.MaxShield)+"\n"+unit.EffectiveDPS.ToString("0.#")+" DPS | Range "+unit.Stats.Range+"\nSpeed "+(unit.Stats.Speed*unit.Destruction.Mobility).ToString("0.#")+" | "+unit.Destruction.Status;
-                unitRefit.text=(unit.WeaponRefits>0?"Refits "+unit.WeaponRefits+" | +"+(unit.RefitBonus*100).ToString("0")+"% weapons":"No weapon refit")+"\n"+(unit.Squadron!=null?unit.Squadron.ActiveCount+" / 6 fighters | ":"")+(unit.Destruction.Firepower<1?"Hull damage: -15% firepower":"Weapons operational");
+                string status=unit.Docked?"DOCKED":unit.IsArriving?"LAUNCHING":unit.ReturningToHangar?"RETURNING":unit.Destruction.Status;
+                unitDetails.text="Hull "+Mathf.CeilToInt(unit.Hull)+" / "+Mathf.CeilToInt(unit.MaxHull)+"\nShields "+Mathf.CeilToInt(unit.Shield)+" / "+Mathf.CeilToInt(unit.MaxShield)+"\n"+unit.EffectiveDPS.ToString("0.#")+" DPS"+(unit.Docked?" (docked)":" | Range "+unit.Stats.Range)+"\nSpeed "+(unit.Docked || unit.IsArriving?0:unit.Stats.Speed*unit.Destruction.Mobility).ToString("0.#")+" | "+status;
+                unitRefit.text=FleetTactics.RoleText(unit)+"\n"+(unit.WeaponRefits>0?"Refits "+unit.WeaponRefits+" | +"+(unit.RefitBonus*100).ToString("0")+"% weapons":"No weapon refit")+"\n"+(unit.Squadron!=null?unit.Squadron.ActiveCount+" / 6 fighters | ":"")+(unit.Docked?"Servicing":unit.Destruction.Firepower<1?"Hull damage: -15% firepower":"Weapons operational");
             }
             else if(chosen.Length>1)
             {
@@ -257,6 +304,7 @@ namespace FleetSurvival
                 unitRefit.text="Refitted units: "+chosen.Count(s=>s.WeaponRefits>0)+" / "+chosen.Length+"\nNew reinforcements arrive without refits.";
             }
             else { unitDetails.text="Select a friendly unit to inspect hull, shields, weapons and handling.";unitRefit.text="Refits affect the fleet currently in battle."; }
+            RefreshHangar(chosen.Length==1?chosen[0]:null,chosen.Length==1);
             tallyWave.text=TallyText(game.WaveTally);tallyRun.text=TallyText(game.RunTally);
             if(game.Phase==BattlePhase.Defeat) endReport.text="Waves survived: "+Mathf.Max(0,game.Wave-1)+"\nEnemy capitals / fighters: "+game.RunTally.EnemyCapitals+" / "+game.RunTally.EnemyFighters+"\nFriendly capitals / fighters lost: "+game.RunTally.FriendlyCapitals+" / "+game.RunTally.FriendlyFighters+"\nBest survival: "+game.BestWave+" waves";
             foreach(var pair in buyButtons) pair.Value.interactable=game.CanCallIn(pair.Key);
@@ -288,9 +336,10 @@ namespace FleetSurvival
                 }
                 Vector3 screen=game.ViewCamera.WorldToScreenPoint(ship.transform.position+Vector3.up*(ship.Stats.Radius*.45f+1));
                 bool readout=ship.Selected || ship.IsFlagship || ship.Hull<ship.MaxHull-.1f || ship.Shield<ship.MaxShield-.1f;
-                bool visible=readout && screen.z>0 && screen.x>0 && screen.x<game.ViewCamera.pixelWidth && screen.y>0 && screen.y<game.ViewCamera.pixelHeight; marker.World.gameObject.SetActive(visible);
+                bool visible=!ship.Docked && readout && screen.z>0 && screen.x>0 && screen.x<game.ViewCamera.pixelWidth && screen.y>0 && screen.y<game.ViewCamera.pixelHeight; marker.World.gameObject.SetActive(visible);
                 if(visible) { RectTransformUtility.ScreenPointToLocalPointInRectangle(root,screen,canvas.renderMode==RenderMode.ScreenSpaceOverlay?null:canvas.worldCamera,out var position); marker.World.anchoredPosition=position; marker.Name.text=ship.IsFlagship?"COMMAND":ship.Selected?ship.Stats.Name:""; Fill(marker.Hull,ship.Hull/ship.MaxHull); Fill(marker.Shield,ship.Shield/ship.MaxShield); }
                 marker.Dot.anchoredPosition=new Vector2(ship.transform.position.x/FleetRules.ArenaRadius*100,ship.transform.position.z/FleetRules.ArenaRadius*73);
+                marker.Dot.gameObject.SetActive(!ship.Docked);
                 marker.Dot.GetComponent<UnityEngine.UI.Image>().color=ship.Selected?Color.white:ship.Friendly?cyan:new Color(1,.35f,.2f);
             }
             foreach(var wreck in game.ActiveWrecks)

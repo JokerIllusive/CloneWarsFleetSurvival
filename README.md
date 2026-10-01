@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.7.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.7.0).
+[Download the Windows v0.8.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.0).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -40,6 +40,7 @@ an enemy flagship, and later waves introduce destroyers and carriers.
 | Confirm reinforcement arrival point | Left click clear space while placing a ship |
 | Cancel reinforcement placement | Right click or Esc |
 | Repair fleet | R, between waves |
+| Recover selected squadron | Backspace or Recover in the hangar panel |
 
 Ships automatically fire at nearby targets. The command panel includes additional
 reinforcement types, weapon refits, sound controls, and a tactical map.
@@ -183,8 +184,8 @@ and a new command updates only the commanded ships. They do not block selection.
   Lucrehulk carrier, and Vulture droid squadrons.
 
 The first supplied Venator is preserved in the source project and model preview.
-The detailed second Venator is used in gameplay. Carrier is a durable ship class in
-this version; deploying fighter squadrons uses the reinforcement panel.
+The detailed second Venator is used in gameplay. Carrier hangars supplement the
+hyperspace reinforcement panel.
 
 Fighter and interceptor units each contain six individual craft, selected and
 ordered as one squadron. Each craft has its own hull allocation and paired guns.
@@ -194,6 +195,43 @@ The original squadron damage budget is shared across the six fighters, so
 surviving squads lose damage output as they lose members. Squadrons share their
 shield pool and maneuver as a group. Fighter models are reduced for the tactical
 view; the ships use gameplay scale rather than literal kilometer-to-meter ratios.
+
+## Carrier hangars and squadron roles
+
+Select a Venator or Lucrehulk carrier to open its hangar panel. Republic carriers
+have two squadron bays; CIS carriers have three. Command ships have one bay. Launch
+Fighter (55 salvage), Interceptor (45), or Strike (75) squadrons. Each contains six
+craft and occupies one fleet capacity, even while launching or docked. Launching
+takes two seconds; the deck has a 12-second cooldown. Bays remain occupied by their
+deployed squads, so the same carrier cannot launch an unlimited fleet.
+
+Select a squadron and press Backspace or Recover to return it to its assigned
+carrier. Purchased squadrons can use a free bay on a nearby friendly carrier.
+Returning craft remain vulnerable until docking. Docked squads cannot fight or
+be targeted; their ship stats remain available through the carrier's bay buttons.
+Surviving hull and shields repair gradually. Every six seconds, the hangar can
+replace one lost craft for eight salvage; no salvage means no replacement. Wait at
+least six seconds after docking and for the launch deck to cool before relaunching.
+Relaunch preserves the squadron's identity, refits, and fleet capacity. Losing a
+carrier destroys its docked craft, while deployed squadrons remain in the battle.
+
+Interceptors prefer hostile squadrons and deal 1.6x damage to craft, but only .55x
+to capitals. Fighters screen the fleet, prefer hostile strike squads, and deal
+1.2x damage to craft / .85x to capitals. Strike loadouts fire one slower torpedo per
+surviving craft, dealing 1.9x damage to capitals / .35x to craft. Capital guns deal
+.6x damage to squadrons. The unit panel shows baseline effective DPS; these target
+modifiers apply on firing. Explicit focus-fire orders override target preference.
+Strike loadouts use the supplied ARC-170 and Vulture models; dedicated bomber
+models are not included. Their refits still add 10% of their own base weapon damage
+per purchase and stop at +100%.
+
+Enemy carriers hold at standoff range, escorts screen carriers when threats are
+distant, and frigates/destroyers use offset approaches. Later waves introduce
+screening escorts, strike loadouts, and carriers. Enemy carriers begin launching
+after a 12-second deck delay and have a finite reserve of one squadron per bay for
+that wave. The preparation header previews the next wave's main ship roster;
+carrier-launched wings are additional reserves. Hangar animation, cooldowns,
+servicing, and enemy launches stop during tactical pause.
 
 ## Procedural destruction
 

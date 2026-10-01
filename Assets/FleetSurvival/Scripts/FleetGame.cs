@@ -8,7 +8,7 @@ using UnityEngine.EventSystems;
 
 namespace FleetSurvival
 {
-    public sealed class FleetGame : MonoBehaviour
+    public sealed partial class FleetGame : MonoBehaviour
     {
         public readonly List<FleetShip> Ships=new List<FleetShip>();
         public readonly List<FleetBolt> Bolts=new List<FleetBolt>();
@@ -21,7 +21,7 @@ namespace FleetSurvival
         public ShipClass? SelectedReinforcement { get; private set; }
         public int IncomingCount => jumps.Count;
         public int FleetCapacityUsed => Ships.Where(s=>s!=null && s.Alive && s.Friendly).Sum(s=>FleetRules.Capacity(s.Faction,s.Kind))+jumps.Where(j=>j.Ship==null).Sum(j=>FleetRules.Capacity(PlayerFaction,j.Kind));
-        public bool HasUpgradeableShips => Ships.Any(s=>s!=null && s.Alive && s.Friendly && !s.IsArriving && s.WeaponRefits<FleetRules.MaxWeaponRefits);
+        public bool HasUpgradeableShips => Ships.Any(s=>s!=null && s.Targetable && s.Friendly && s.WeaponRefits<FleetRules.MaxWeaponRefits);
         public bool CanUpgradeWeapons => Phase==BattlePhase.Preparation && !Paused && Salvage>=200 && HasUpgradeableShips;
         public Faction PlayerFaction { get; private set; }
         public BattlePhase Phase { get; private set; }=BattlePhase.Menu;
@@ -39,6 +39,19 @@ namespace FleetSurvival
         public int FriendlyCount => Ships.Count(s=>s!=null && s.Alive && s.Friendly);
         public int EnemyCount => Ships.Count(s=>s!=null && s.Alive && !s.Friendly);
         public int SelectedCount => Ships.Count(s=>s!=null && s.Alive && s.Selected);
+        public FleetShip InspectedShip => Ships.FirstOrDefault(s=>s!=null && s.Alive && s.Friendly && s.Selected);
+        public string NextWaveBriefing => "WAVE "+(Wave+1)+": "+string.Join(" / ",FleetRules.WavePlan(Wave+1).GroupBy(e=>e.Role==SquadronRole.Strike?"strike":e.Kind.ToString().ToLower()).Select(g=>g.Count()+" "+g.Key));
+        public bool SpendSalvage(int amount) {if(amount<0 || Salvage<amount) return false;Salvage-=amount;return true;}
+        public FleetHangar RecoveryHangar(FleetShip squad)
+        {return squad.HomeHangar??Ships.Where(s=>s!=null && s.Targetable && s.Friendly==squad.Friendly && s.Hangar!=null && s.Hangar.UsedBays<s.Hangar.Bays).OrderBy(s=>(s.transform.position-squad.transform.position).sqrMagnitude).Select(s=>s.Hangar).FirstOrDefault();}
+        public bool LaunchSelectedSquadron(SquadronRole role)
+        {var ship=InspectedShip;if(SelectedCount!=1 || ship==null || ship.Hangar==null) return false;var squad=ship.Hangar.Launch(role);Notify(squad!=null?"Hangar launch: "+squad.Stats.Name+". One fleet capacity reserved.":"Hangar unavailable: check bays, cooldown, salvage, and fleet capacity.");return squad!=null;}
+        public bool RecoverSelectedSquadron()
+        {var squad=InspectedShip;if(SelectedCount!=1 || squad==null || squad.Squadron==null) return false;var hangar=RecoveryHangar(squad);bool ok=hangar!=null && hangar.Recover(squad);Notify(ok?"Squadron returning to "+hangar.Owner.Stats.Name+". Lost fighters cost 8 salvage each to replace.":"Recovery unavailable: select an active squadron and provide a free carrier bay.");return ok;}
+        public bool RelaunchSelectedSquadron()
+        {var squad=InspectedShip;bool ok=SelectedCount==1 && squad!=null && squad.HomeHangar!=null && squad.HomeHangar.Relaunch(squad);Notify(ok?"Recovered squadron launching.":"Relaunch requires a docked squadron, six seconds in the hangar, and a ready launch deck.");return ok;}
+        public void SelectHangarBay(FleetHangar hangar,int index)
+        {if(hangar==null || !hangar.Owner.Friendly || index<0 || index>=hangar.Squadrons.Count) return;foreach(var s in Ships) s.Selected=s==hangar.Squadrons[index];FocusSector(hangar.Squadrons[index].Docked?hangar.Owner.transform.position:hangar.Squadrons[index].transform.position);}
         public bool AttackMoveMode { get; private set; }
         public bool SmokeMode { get; private set; }
         public bool IsDragging { get; private set; }
@@ -134,12 +147,12 @@ namespace FleetSurvival
             Spawn(Faction.CIS,ShipClass.Frigate,false,false,new Vector3(9,0,1));
         }
 
-        public FleetShip Spawn(Faction faction,ShipClass kind,bool friendly,bool flagship,Vector3 position,float multiplier=1)
+        public FleetShip Spawn(Faction faction,ShipClass kind,bool friendly,bool flagship,Vector3 position,float multiplier=1,SquadronRole? role=null)
         {
             var go=new GameObject((friendly?"Allied ":"Enemy ")+FleetRules.Stats(faction,kind).Name);
             go.transform.SetParent(shipsRoot); go.transform.position=position;
             go.transform.rotation=Quaternion.Euler(0,friendly?0:180,0);
-            var ship=go.AddComponent<FleetShip>(); ship.Configure(this,faction,kind,friendly,flagship,multiplier);
+            var ship=go.AddComponent<FleetShip>(); ship.Configure(this,faction,kind,friendly,flagship,multiplier,role);
             Ships.Add(ship); return ship;
         }
 
@@ -244,7 +257,7 @@ namespace FleetSurvival
         {
             float radius=FleetRules.Stats(PlayerFaction,kind).Radius;
             if(position.magnitude>FleetRules.ArenaRadius-radius-1) return false;
-            if(Ships.Any(s=>s!=null && s.Alive && !s.IsArriving && Vector3.Distance(s.transform.position,position)<s.Stats.Radius+radius+1)) return false;
+            if(Ships.Any(s=>s!=null && s.Targetable && Vector3.Distance(s.transform.position,position)<s.Stats.Radius+radius+1)) return false;
             return !jumps.Any(j=>j!=ignore && Vector3.Distance(j.ReservedPosition,position)<FleetRules.Stats(PlayerFaction,j.Kind).Radius+radius+1);
         }
         public bool ResolveArrivalPosition(ShipClass kind,Vector3 requested,FleetJump ignore,out Vector3 result)
@@ -291,8 +304,8 @@ namespace FleetSurvival
             if(Salvage<cost) { Notify("Weapon refit requires 200 salvage."); return false; }
             if(!HasUpgradeableShips) { Notify("All active units have reached the +100% weapon refit limit.");return false; }
             Salvage-=cost;
-            foreach(var s in Ships) if(s!=null && s.Alive && s.Friendly && !s.IsArriving && s.WeaponRefits<FleetRules.MaxWeaponRefits)
-            { s.WeaponRefits++;var stats=s.Stats;stats.Damage=FleetRules.Stats(s.Faction,s.Kind).Damage*(1+FleetRules.WeaponRefitStep*s.WeaponRefits);s.Stats=stats; }
+            foreach(var s in Ships) if(s!=null && s.Targetable && s.Friendly && s.WeaponRefits<FleetRules.MaxWeaponRefits)
+            { s.WeaponRefits++;var stats=s.Stats;stats.Damage=s.BaseDamage*(1+FleetRules.WeaponRefitStep*s.WeaponRefits);s.Stats=stats; }
             Notify("Eligible units gained +10% base weapon damage; maximum bonus +100%. New ships require a later refit."); return true;
         }
 
@@ -323,18 +336,16 @@ namespace FleetSurvival
                     if(bossQueued) { kind=ShipClass.Flagship; bossQueued=false; }
                     else
                     {
-                        if(Wave>=6 && enemiesRemaining>=6 && spawnIndex%4==0) { kind=ShipClass.Carrier; enemiesRemaining-=6; }
-                        else if(Wave>=3 && enemiesRemaining>=5 && spawnIndex%3==0) { kind=ShipClass.Destroyer; enemiesRemaining-=5; }
-                        else if(enemiesRemaining>=3 && (spawnIndex%3==0 || Wave>=4 && spawnIndex%2==0)) { kind=ShipClass.Frigate; enemiesRemaining-=3; }
-                        else { kind=spawnIndex%2==0?ShipClass.Interceptor:ShipClass.Fighter; enemiesRemaining--; }
+                        kind=FleetRules.EnemyClass(Wave,spawnIndex,enemiesRemaining,out int cost);enemiesRemaining-=cost;
                     }
                     float a=(spawnIndex*137.5f+Wave*43)*Mathf.Deg2Rad;
-                    Spawn(enemy,kind,false,false,new Vector3(Mathf.Sin(a),0,Mathf.Cos(a))*(FleetRules.ArenaRadius-7),FleetRules.EnemyMultiplier(Wave));
+                    SquadronRole? role=FleetRules.EnemyRole(Wave,spawnIndex,kind);
+                    Spawn(enemy,kind,false,false,new Vector3(Mathf.Sin(a),0,Mathf.Cos(a))*(FleetRules.ArenaRadius-7),FleetRules.EnemyMultiplier(Wave),role);
                     spawnIndex++; spawnTimer=1.6f;
                 }
             }
             for(int i=formations.Count-1;i>=0;i--) if(!formations[i].Tick(dt)) formations.RemoveAt(i);
-            for(int i=Ships.Count-1;i>=0;i--) if(i<Ships.Count && Ships[i]!=null) Ships[i].Tick(dt);
+            foreach(var ship in Ships.ToArray()) if(ship!=null && Ships.Contains(ship)) ship.Tick(dt);
             for(int i=Bolts.Count-1;i>=0;i--) if(i<Bolts.Count && Bolts[i]!=null) Bolts[i].Tick(dt);
             if(Phase==BattlePhase.Combat && enemiesRemaining<=0 && !bossQueued && EnemyCount==0 && wrecks.Count==0)
             {
@@ -350,10 +361,8 @@ namespace FleetSurvival
             FleetShip result=null; float best=float.MaxValue;
             foreach(var ship in Ships)
             {
-                if(ship==null || !ship.Alive || ship.IsArriving || ship.Friendly==from.Friendly) continue;
-                float score=(ship.transform.position-from.transform.position).sqrMagnitude;
-                // Enemy capitals prioritize the command ship when distances are comparable.
-                if(!from.Friendly && ship.IsFlagship) score*=.72f;
+                if(ship==null || !ship.Targetable || ship.Friendly==from.Friendly) continue;
+                float score=(ship.transform.position-from.transform.position).sqrMagnitude*FleetTactics.TargetPreference(from,ship);
                 if(score<best) { best=score; result=ship; }
             }
             return result;
@@ -363,18 +372,20 @@ namespace FleetSurvival
         {
             from.Weapons.FireVolley(target,damage);
             bool fighter=from.Kind==ShipClass.Fighter || from.Kind==ShipClass.Interceptor;
-            PlayBattleSound(FleetSound.Weapon(from.Faction,from.Kind),from.transform.position,fighter?.065f:.13f);
+            PlayBattleSound(from.Squadron!=null && from.Role==SquadronRole.Strike?FleetSound.Get("StrikeLaunch"):FleetSound.Weapon(from.Faction,from.Kind),from.transform.position,fighter?.065f:.13f);
         }
 
         public void SpawnBolt(FleetShip from,FleetShip target,float damage,Vector3 muzzle,Color color)
         {
-            var go=GameObject.CreatePrimitive(PrimitiveType.Cube); go.name="Turbolaser bolt";
+            bool torpedo=from.Squadron!=null && from.Role==SquadronRole.Strike;
+            var go=GameObject.CreatePrimitive(PrimitiveType.Cube); go.name=torpedo?"Strike torpedo":"Turbolaser bolt";
             Destroy(go.GetComponent<Collider>()); go.transform.SetParent(effectsRoot);
             go.transform.position=muzzle;
-            go.transform.localScale=new Vector3(.14f,.14f,from.Kind==ShipClass.Fighter?1.3f:2.8f);
+            go.transform.localScale=torpedo?new Vector3(.24f,.24f,.85f):new Vector3(.14f,.14f,from.Kind==ShipClass.Fighter?1.3f:2.8f);
             go.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(color,true);
             var core=GameObject.CreatePrimitive(PrimitiveType.Cube); Destroy(core.GetComponent<Collider>()); core.transform.SetParent(go.transform,false); core.transform.localScale=new Vector3(.4f,.4f,1.01f); core.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(Color.white,true);
-            var bolt=go.AddComponent<FleetBolt>(); bolt.Game=this; bolt.Target=target; bolt.Damage=damage; Bolts.Add(bolt);
+            if(torpedo) {var trail=go.AddComponent<TrailRenderer>();trail.time=.24f;trail.startWidth=.2f;trail.endWidth=0;trail.sharedMaterial=ShipVisuals.Material(color,true);trail.minVertexDistance=.25f;}
+            var bolt=go.AddComponent<FleetBolt>(); bolt.Game=this; bolt.Target=target; bolt.Damage=damage;bolt.Torpedo=torpedo; Bolts.Add(bolt);
         }
         public void PlayBattleSound(AudioClip clip,Vector3 position,float volume)
         {
@@ -391,6 +402,7 @@ namespace FleetSurvival
         public void ShipDestroyed(FleetShip ship,bool? reactorOverride=null)
         {
             if(!Ships.Contains(ship)) return;
+            if(ship.Hangar!=null) ship.Hangar.CarrierLost();
             if(ship.Squadron==null) { RunTally.Record(ship.Friendly,false);WaveTally.Record(ship.Friendly,false); }
             if(ship.Squadron!=null) { ship.Destruction.BreakApart();Burst(ship.transform.position,ship.Stats.Radius*.35f); }
             else wrecks.Add(FleetWreck.Create(this,ship,reactorOverride??UnityEngine.Random.value<.28f));
@@ -412,7 +424,7 @@ namespace FleetSurvival
         }
         public void ReactorBlast(Vector3 position,float radius,float damage)
         {
-            foreach(var ship in Ships.ToArray()) if(ship!=null && ship.Alive && !ship.IsArriving)
+            foreach(var ship in Ships.ToArray()) if(ship!=null && ship.Targetable)
             {
                 float distance=Mathf.Max(0,Vector3.Distance(ship.transform.position,position)-ship.Stats.Radius*.35f);
                 if(distance<radius) ship.Damage(damage*(1-distance/radius),position);
@@ -451,7 +463,7 @@ namespace FleetSurvival
             { if(Paused && particles.isPlaying) particles.Pause();else if(!Paused && particles.isPaused) particles.Play(); }
         }
         public void ToggleMute() { muted=!muted; audioSource.mute=muted; foreach(var voice in soundVoices) voice.mute=muted; HUD.SetMute(muted); }
-        public void SelectAll() { foreach(var s in Ships) if(s!=null && s.Alive && s.Friendly && !s.IsArriving) s.Selected=true; }
+        public void SelectAll() { foreach(var s in Ships) if(s!=null && s.Alive) s.Selected=s.Friendly && s.Targetable; }
         public void SelectFlagship()
         { foreach(var s in Ships) if(s!=null) s.Selected=s.Friendly && s.IsFlagship; if(Flagship!=null) { cameraFocus=Flagship.transform.position; PositionCamera(); } }
 
@@ -467,6 +479,7 @@ namespace FleetSurvival
             if(Input.GetKeyDown(KeyCode.Alpha2)) BeginReinforcementPlacement(ShipClass.Frigate);
             if(Input.GetKeyDown(KeyCode.Alpha3)) BeginReinforcementPlacement(ShipClass.Destroyer);
             if(Input.GetKeyDown(KeyCode.R)) RepairFleet();
+            if(Input.GetKeyDown(KeyCode.Backspace)) RecoverSelectedSquadron();
             bool overUI=EventSystem.current!=null && EventSystem.current.IsPointerOverGameObject();
             if(SelectedReinforcement.HasValue)
             {
@@ -515,7 +528,7 @@ namespace FleetSurvival
 
         public void OrderMove(Vector3 destination,bool attackMove)
         {
-            var selected=Ships.Where(s=>s!=null && s.Alive && !s.IsArriving && s.Selected && s.Friendly).ToArray();
+            var selected=Ships.Where(s=>s!=null && s.Targetable && s.Selected && s.Friendly).ToArray();
             if(selected.Length==0) { Notify("Select allied ships first, or press Tab to select the fleet."); return; }
             var formation=new FleetFormation(selected,destination,attackMove); formations.Add(formation);
             foreach(var ship in selected) ship.MovePreview.Refresh();
@@ -588,6 +601,7 @@ namespace FleetSurvival
                 CheckTacticalReadouts(assertions);
                 CheckFleetLimits(assertions);
                 CheckSectorInterface(assertions);
+                CheckCarriersAndTactics(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -654,6 +668,18 @@ namespace FleetSurvival
             Begin(Faction.CIS);Salvage=1000;Notify("GEONOSIS ORBIT / Separatist fleet command");
             yield return null;
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-hud-cis.png"),1280,800);
+            Begin(Faction.Republic);ClearBattle();Salvage=1000;
+            Spawn(Faction.Republic,ShipClass.Flagship,true,true,new Vector3(-20,0,-12));
+            var carrier=Spawn(Faction.Republic,ShipClass.Carrier,true,false,new Vector3(12,0,0));carrier.Selected=true;
+            var wing=carrier.Hangar.Launch(SquadronRole.Strike);for(int i=0;i<41;i++) Tick(.05f);
+            carrier.Hangar.Tick(12);carrier.Hangar.Launch(SquadronRole.Interceptor);Tick(.6f);
+            Notify("CARRIER OPERATIONS / six-craft squadrons, strike torpedoes and limited hangar bays");cameraFocus=new Vector3(3,0,7);cameraDistance=91;PositionCamera();
+            yield return null;
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-carrier-preview.png"));
+            wing.Shield=0;wing.Damage(wing.MaxHull/3+.1f);carrier.Hangar.Recover(wing);wing.transform.position=carrier.Hangar.DockPoint;Tick(.05f);carrier.Hangar.Tick(6);
+            SelectHangarBay(carrier.Hangar,0);Notify("HANGAR RECOVERY / docked squads keep capacity; lost fighters use salvage");
+            yield return null;
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-hangar-service-preview.png"),1280,800);
             yield return new WaitForSecondsRealtime(.3f);
             Application.Quit(0);
         }
