@@ -20,7 +20,9 @@ namespace FleetSurvival
         GameObject placementGhost;
         public ShipClass? SelectedReinforcement { get; private set; }
         public int IncomingCount => jumps.Count;
-        public int FleetCapacityUsed => FriendlyCount+jumps.Count(j=>j.Ship==null);
+        public int FleetCapacityUsed => Ships.Where(s=>s!=null && s.Alive && s.Friendly).Sum(s=>FleetRules.Capacity(s.Faction,s.Kind))+jumps.Where(j=>j.Ship==null).Sum(j=>FleetRules.Capacity(PlayerFaction,j.Kind));
+        public bool HasUpgradeableShips => Ships.Any(s=>s!=null && s.Alive && s.Friendly && !s.IsArriving && s.WeaponRefits<FleetRules.MaxWeaponRefits);
+        public bool CanUpgradeWeapons => Phase==BattlePhase.Preparation && !Paused && Salvage>=200 && HasUpgradeableShips;
         public Faction PlayerFaction { get; private set; }
         public BattlePhase Phase { get; private set; }=BattlePhase.Menu;
         public int Wave { get; private set; }
@@ -189,6 +191,7 @@ namespace FleetSurvival
         }
         public int CallInCount(ShipClass kind) => PlayerFaction==Faction.Republic && kind==ShipClass.Escort?2:1;
         public int CallInCost(ShipClass kind) => FleetRules.Stats(PlayerFaction,kind).Cost*CallInCount(kind);
+        public int CallInCapacity(ShipClass kind) => FleetRules.Capacity(PlayerFaction,kind)*CallInCount(kind);
         public string CallInName(ShipClass kind) => CallInCount(kind)==2?"Arquitens cruiser pair":FleetRules.Stats(PlayerFaction,kind).Name+(kind==ShipClass.Fighter || kind==ShipClass.Interceptor?" (6)":"");
         Vector3[] CallInPositions(ShipClass kind,Vector3 center)
         {
@@ -197,7 +200,7 @@ namespace FleetSurvival
             return CallInCount(kind)==2?new[]{center-Vector3.right*spacing,center+Vector3.right*spacing}:new[]{center};
         }
         bool IsCallInClear(ShipClass kind,Vector3 center) => CallInPositions(kind,center).All(p=>IsArrivalClear(kind,p,null));
-        public bool CanCallIn(ShipClass kind) => (Phase==BattlePhase.Preparation || Phase==BattlePhase.Combat) && !Paused && kind!=ShipClass.Flagship && FleetCapacityUsed+CallInCount(kind)<=FleetRules.FleetLimit && Salvage>=CallInCost(kind);
+        public bool CanCallIn(ShipClass kind) => (Phase==BattlePhase.Preparation || Phase==BattlePhase.Combat) && !Paused && kind!=ShipClass.Flagship && FleetCapacityUsed+CallInCapacity(kind)<=FleetRules.FleetLimit && Salvage>=CallInCost(kind);
         public bool BeginReinforcementPlacement(ShipClass kind)
         {
             if(!CanCallIn(kind)) { Notify("Call-in unavailable: check salvage, fleet capacity, and pause."); return false; }
@@ -286,9 +289,11 @@ namespace FleetSurvival
             if(Phase!=BattlePhase.Preparation || Paused) return false;
             const int cost=200;
             if(Salvage<cost) { Notify("Weapon refit requires 200 salvage."); return false; }
+            if(!HasUpgradeableShips) { Notify("All active units have reached the +100% weapon refit limit.");return false; }
             Salvage-=cost;
-            foreach(var s in Ships) if(s!=null && s.Friendly && !s.IsArriving) { var stats=s.Stats; stats.Damage*=1.18f; s.Stats=stats;s.WeaponRefits++; }
-            Notify("Current fleet weapons improved by 18%. New ships require a later refit."); return true;
+            foreach(var s in Ships) if(s!=null && s.Alive && s.Friendly && !s.IsArriving && s.WeaponRefits<FleetRules.MaxWeaponRefits)
+            { s.WeaponRefits++;var stats=s.Stats;stats.Damage=FleetRules.Stats(s.Faction,s.Kind).Damage*(1+FleetRules.WeaponRefitStep*s.WeaponRefits);s.Stats=stats; }
+            Notify("Eligible units gained +10% base weapon damage; maximum bonus +100%. New ships require a later refit."); return true;
         }
 
         void Update()
@@ -579,6 +584,7 @@ namespace FleetSurvival
                 CheckSquadronsAndAudio(assertions);
                 CheckLivingSector(assertions);
                 CheckTacticalReadouts(assertions);
+                CheckFleetLimits(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -713,7 +719,7 @@ namespace FleetSurvival
             for(int i=0;i<16;i++) Tick(.05f);
             Check(IncomingCount==0 && !inbound.IsArriving && inbound.GetComponent<Collider>().enabled && FriendlyCount==6,"Call-in finishes as an active ship",assertions);
             Begin(Faction.Republic); Salvage=2000;
-            while(FriendlyCount<21) Spawn(Faction.Republic,ShipClass.Fighter,true,false,new Vector3(60,0,-50));
+            while(FleetCapacityUsed<21) Spawn(Faction.Republic,ShipClass.Fighter,true,false,new Vector3(60,0,-50));
             Check(RecruitAt(ShipClass.Fighter,new Vector3(-50,0,-20)) && FleetCapacityUsed==22 && !RecruitAt(ShipClass.Fighter,new Vector3(-50,0,20)),"Pending call-ins respect fleet capacity",assertions);
             ReturnToMenu(); Check(IncomingCount==0 && !SelectedReinforcement.HasValue,"Menu clears pending reinforcements",assertions);
             var rep=FleetSound.Get("RepublicHeavy"); var cis=FleetSound.Get("CISHeavy");
@@ -741,7 +747,7 @@ namespace FleetSurvival
             }
             Begin(Faction.Republic); Salvage=1000;
             Check(CallInCount(ShipClass.Escort)==2 && CallInCost(ShipClass.Escort)==280,"Arquitens pair has two-cruiser cost",assertions);
-            Check(RecruitAt(ShipClass.Escort,new Vector3(0,0,32)) && Salvage==720 && IncomingCount==2 && FleetCapacityUsed==7,"Arquitens call-in reserves two cruisers atomically",assertions);
+            Check(RecruitAt(ShipClass.Escort,new Vector3(0,0,32)) && Salvage==720 && IncomingCount==2 && FleetCapacityUsed==17,"Arquitens call-in reserves both cruisers' capacity atomically",assertions);
             for(int i=0;i<60;i++) Tick(.05f);
             var cruisers=Ships.Where(s=>s.Kind==ShipClass.Escort && s.Friendly).ToArray();
             Check(cruisers.Length==2 && cruisers.All(s=>!s.IsArriving) && Vector3.Distance(cruisers[0].transform.position,cruisers[1].transform.position)>6,"Arquitens pair arrives at separated points",assertions);
@@ -749,8 +755,8 @@ namespace FleetSurvival
             int original=Salvage;
             Spawn(Faction.Republic,ShipClass.Escort,true,false,new Vector3(3.6f,0,32));
             Check(!RecruitAt(ShipClass.Escort,new Vector3(0,0,32)) && Salvage==original && IncomingCount==0,"Partly blocked pair spends no salvage",assertions);
-            while(FriendlyCount<21) Spawn(Faction.Republic,ShipClass.Frigate,true,false,new Vector3(55,0,-40));
-            Check(!CanCallIn(ShipClass.Escort) && IncomingCount==0,"Arquitens pair needs two free fleet slots",assertions);
+            while(FleetCapacityUsed<19) Spawn(Faction.Republic,ShipClass.Fighter,true,false,new Vector3(55,0,-40));
+            Check(!CanCallIn(ShipClass.Escort) && IncomingCount==0,"Arquitens pair needs four free fleet capacity",assertions);
             Begin(Faction.CIS); Salvage=1000;
             Check(CallInCount(ShipClass.Escort)==1 && CallInCost(ShipClass.Escort)==125,"Munificent escort retains single-ship call-in",assertions);
             Check(FleetSound.Weapon(Faction.Republic,ShipClass.Flagship).name.StartsWith("VenatorCannon") && FleetSound.Weapon(Faction.CIS,ShipClass.Frigate).name.StartsWith("MunificentCannon"),"Supplied capital cannon sounds are mapped to hulls",assertions);
@@ -784,18 +790,44 @@ namespace FleetSurvival
             }
         }
         static void Check(bool condition,string name,List<string> checks) { if(!condition) throw new Exception("Smoke test failed: "+name); checks.Add(name); }
+        void CheckFleetLimits(List<string> assertions)
+        {
+            Begin(Faction.CIS);Salvage=10000;
+            Check(FleetCapacityUsed==13 && CallInCapacity(ShipClass.Carrier)==8 && CallInCapacity(ShipClass.Destroyer)==4,"Starting fleet and heavy hulls have weighted capacity",assertions);
+            Check(RecruitAt(ShipClass.Carrier,new Vector3(0,0,36)) && FleetCapacityUsed==21,"Lucrehulk reserves eight capacity during its charge",assertions);
+            int funds=Salvage;
+            Check(!RecruitAt(ShipClass.Carrier,new Vector3(40,0,20)) && Salvage==funds && IncomingCount==1,"Queued heavy hull prevents carrier spam without charging salvage",assertions);
+            for(int i=0;i<46;i++) Tick(.05f);
+            Check(jumps[0].Ship!=null && jumps[0].Ship.IsArriving && FleetCapacityUsed==21,"Warping carrier capacity is counted exactly once",assertions);
+            for(int i=0;i<16;i++) Tick(.05f);
+            var carrier=Ships.First(s=>s.Kind==ShipClass.Carrier && s.Friendly);
+            Check(FleetCapacityUsed==21 && IncomingCount==0,"Carrier retains its capacity after arrival",assertions);
+            Check(RecruitAt(ShipClass.Fighter,new Vector3(-40,0,-20)) && FleetCapacityUsed==22 && !CanCallIn(ShipClass.Fighter),"A squadron can use the remaining single capacity",assertions);
+            carrier.Hull=0;ShipDestroyed(carrier,false);
+            Check(FleetCapacityUsed==14 && CanCallIn(ShipClass.Carrier),"Heavy ship loss frees its full capacity",assertions);
+            Begin(Faction.Republic);ClearBattle();Salvage=10000;
+            var ship=Spawn(Faction.Republic,ShipClass.Destroyer,true,false,Vector3.zero);ship.Selected=true;float damage=ship.Stats.Damage;
+            for(int i=0;i<10;i++) Check(UpgradeWeapons(),"Refit purchase "+(i+1)+" of ten",assertions);
+            HUD.RefreshText();funds=Salvage;
+            Check(ship.WeaponRefits==10 && Mathf.Abs(ship.Stats.Damage-damage*2)<.01f && HUD.SelectedDetails.Contains("+100% weapons"),"Ten refits cap base weapon damage at exactly plus 100 percent",assertions);
+            Check(!CanUpgradeWeapons && !UpgradeWeapons() && Salvage==funds && ship.Stats.Damage==damage*2,"Capped fleet cannot spend salvage on another refit",assertions);
+            var fresh=Spawn(Faction.Republic,ShipClass.Frigate,true,false,new Vector3(25,0,0));float freshDamage=fresh.Stats.Damage;
+            Check(CanUpgradeWeapons && UpgradeWeapons() && fresh.WeaponRefits==1 && Mathf.Abs(fresh.Stats.Damage-freshDamage*1.1f)<.01f && ship.WeaponRefits==10 && ship.Stats.Damage==damage*2,"Mixed fleet upgrades new ship while keeping capped ship unchanged",assertions);
+            TogglePause();funds=Salvage;Check(!UpgradeWeapons() && Salvage==funds,"Paused refit cannot spend salvage",assertions);TogglePause();
+            Check(HUD.ReinforcementLabel(ShipClass.Escort).Contains("4 capacity"),"Pair purchase button shows combined fleet capacity",assertions);
+        }
         void CheckTacticalReadouts(List<string> assertions)
         {
             Begin(Faction.Republic);ClearBattle();Salvage=2000;
             var capital=Spawn(Faction.Republic,ShipClass.Frigate,true,false,new Vector3(-25,0,-20));capital.Selected=true;
             float baseDPS=capital.EffectiveDPS;
-            Check(UpgradeWeapons() && capital.WeaponRefits==1 && Mathf.Abs(capital.EffectiveDPS-baseDPS*1.18f)<.01f,"Refit metadata matches actual weapon damage",assertions);
+            Check(UpgradeWeapons() && capital.WeaponRefits==1 && Mathf.Abs(capital.EffectiveDPS-baseDPS*1.1f)<.01f,"Refit metadata matches actual weapon damage",assertions);
             UpgradeWeapons();HUD.RefreshText();
-            Check(capital.WeaponRefits==2 && HUD.SelectedDetails.Contains("+39% weapons") && HUD.SelectedDetails.Contains(capital.EffectiveDPS.ToString("0.#")+" DPS"),"Selected readout shows compounded refit effects",assertions);
+            Check(capital.WeaponRefits==2 && HUD.SelectedDetails.Contains("+20% weapons") && HUD.SelectedDetails.Contains(capital.EffectiveDPS.ToString("0.#")+" DPS"),"Selected readout shows additive refit effects",assertions);
             var fresh=Spawn(Faction.Republic,ShipClass.Frigate,true,false,new Vector3(-45,0,-30));
             Check(fresh.WeaponRefits==0 && Mathf.Abs(fresh.EffectiveDPS-baseDPS)<.01f,"New ship does not inherit earlier refits",assertions);
             capital.Damage(capital.Shield+capital.MaxHull*.4f);HUD.RefreshText();
-            Check(HUD.SelectedDetails.Contains("Hull damage: -15% firepower") && Mathf.Abs(capital.EffectiveDPS-baseDPS*1.18f*1.18f*.85f)<.01f,"Readout includes hull firepower penalty",assertions);
+            Check(HUD.SelectedDetails.Contains("Hull damage: -15% firepower") && Mathf.Abs(capital.EffectiveDPS-baseDPS*1.2f*.85f)<.01f,"Readout includes hull firepower penalty",assertions);
             Check(HUD.ReinforcementLabel(ShipClass.Escort).Contains("280 salvage") && HUD.ReinforcementLabel(ShipClass.Escort).Contains("20 DPS each") && HUD.ReinforcementLabel(ShipClass.Fighter).Contains("Shields 80"),"Purchase stats clarify pair pricing and per-ship damage",assertions);
             var squad=Spawn(Faction.Republic,ShipClass.Fighter,true,false,new Vector3(40,0,-40));squad.Shield=0;
             float squadDPS=squad.EffectiveDPS;squad.Damage(squad.MaxHull/6+.01f,squad.VisualRoot.GetChild(0).position);

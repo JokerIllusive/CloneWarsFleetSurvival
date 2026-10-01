@@ -25,6 +25,20 @@ namespace FleetSurvival
         public const int FleetLimit = 22;
         public const float ArenaRadius = 76;
         public const int StartingSalvage = 220;
+        public const int MaxWeaponRefits = 10;
+        public const float WeaponRefitStep = .1f;
+        public static int Capacity(Faction faction,ShipClass kind)
+        {
+            switch(kind)
+            {
+                case ShipClass.Flagship:return 5;
+                case ShipClass.Frigate:return 3;
+                case ShipClass.Destroyer:return 4;
+                case ShipClass.Escort:return 2;
+                case ShipClass.Carrier:return faction==Faction.CIS?8:6;
+                default:return 1;
+            }
+        }
 
         public static FlightHandling Handling(ShipClass kind)
         {

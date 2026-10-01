@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.6.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.6.0).
+[Download the Windows v0.6.1 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.6.1).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -50,13 +50,16 @@ the current wave and the whole run. Losing a squadron does not double-count its
 fighters; repairs restore craft without erasing earlier losses. A new wave resets
 only the wave column, and a new run resets both columns.
 
-Reinforcement buttons show salvage cost, base damage per second, hull, and shields.
+Reinforcement buttons show salvage cost, fleet capacity, base damage per second, hull, and shields.
 Arquitens pair costs cover both ships; its damage, hull, and shield values are per
 cruiser. Fighter button values are for a full six-craft squadron.
 
 Selecting one unit shows current and maximum hull/shields, effective damage per
 second, range, damage-adjusted speed, and hull condition. Its refit count and actual
-compounded weapon bonus are explicit: one refit adds 18%, two add about 39%.
+weapon bonus are explicit: each refit adds 10% of base weapon damage, so two add
+20%. Each unit accepts at most ten refits, capping its weapon bonus at +100%
+(double base damage). Refits cost 200 salvage; capped ships stay unchanged and a
+fully capped fleet cannot spend salvage on another refit.
 Effective damage includes damaged-hull penalties and surviving fighter count.
 Selecting several units shows combined hull, shields, damage, and refitted unit count.
 Refits apply to active friendly units present when purchased; new and arriving
@@ -91,11 +94,24 @@ The additional profiles are documented in `Resources/Audio/DerivedSounds.json`.
 Use the reinforcement panel or 1 / 2 / 3, then left-click an arrival point.
 A cyan hologram marks clear space; red means the position is blocked or outside
 the sector. Salvage is spent only when placement succeeds. Incoming ships reserve
-a fleet slot, so queued reinforcements count toward the 22-unit capacity. Each
-capital ship occupies one slot; each six-fighter squadron occupies one slot.
+their full capacity during the charge and warp, counted once after they spawn.
+The fleet has a 22-capacity budget:
+
+| Unit | Capacity |
+| --- | --- |
+| Six-fighter or interceptor squadron | 1 |
+| Arquitens or Munificent escort | 2 |
+| Acclamator or Munificent frigate | 3 |
+| Venator or Recusant destroyer | 4 |
+| Command flagship | 5 |
+| Venator carrier | 6 |
+| Lucrehulk carrier | 8 |
+
+The starting fleet uses 13 capacity. Losing a unit releases its full capacity;
+losing one fighter inside a surviving squadron does not release its squadron slot.
 
 An Arquitens call-in brings two cruisers at separated arrival points for 280
-salvage (140 each), occupying two slots. Both positions must be clear before
+salvage (140 each), using four capacity in total. Both positions must be clear before
 salvage is charged. The CIS Munificent escort remains a single-ship call-in.
 
 After a short charge, the ship exits hyperspace with a stretched hull and light

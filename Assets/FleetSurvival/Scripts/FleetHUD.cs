@@ -120,7 +120,7 @@ namespace FleetSurvival
             var classes=new[]{ShipClass.Fighter,ShipClass.Interceptor,ShipClass.Escort,ShipClass.Frigate,ShipClass.Destroyer,ShipClass.Carrier};
             for(int i=0;i<classes.Length;i++) { var kind=classes[i]; buyButtons[kind]=Button(bottom,kind.ToString(),new Vector2(0,1),new Vector2(28+(i%3)*320,-58-(i/3)*104),new Vector2(300,94),()=>game.BeginReinforcementPlacement(kind));buyButtons[kind].GetComponentInChildren<TextMeshProUGUI>().fontSize=17; }
             repair=Button(bottom,"REPAIR FLEET [R]\n120 salvage",new Vector2(0,1),new Vector2(1010,-58),new Vector2(270,72),()=>game.RepairFleet());
-            refit=Button(bottom,"WEAPON REFIT\n200 / +18% damage",new Vector2(0,1),new Vector2(1010,-162),new Vector2(270,94),()=>game.UpgradeWeapons());
+            refit=Button(bottom,"WEAPON REFIT\n200 / +10% damage\nMAX BONUS +100%",new Vector2(0,1),new Vector2(1010,-162),new Vector2(270,94),()=>game.UpgradeWeapons());refit.GetComponentInChildren<TextMeshProUGUI>().fontSize=18;
             launch=Button(bottom,"LAUNCH WAVE",new Vector2(1,1),new Vector2(-28,-58),new Vector2(555,198),()=>game.LaunchWave());
             Text(bottom,"Call in: choose a ship, then left-click clear space. Right-click / Esc cancels. Repairs and refits are between waves.",new Vector2(0,0),new Vector2(28,12),new Vector2(1830,27),18,mutedText);
             message=Text(screen,"Fleet ready.",new Vector2(.5f,1),new Vector2(0,-111),new Vector2(1080,52),23,ink,TextAlignmentOptions.Center);
@@ -191,13 +191,13 @@ namespace FleetSurvival
         {
             var stats=FleetRules.Stats(game.PlayerFaction,kind);bool pair=game.CallInCount(kind)>1;
             string name=pair?"Arquitens cruiser pair (2)":game.CallInName(kind);
-            return name+"\n"+game.CallInCost(kind)+" salvage | "+(stats.Damage/stats.Interval).ToString("0.#")+" DPS"+(pair?" each":"")+"\nHull "+stats.Hull+" | Shields "+stats.Shield+(pair?" each":"");
+            return name+"\n"+game.CallInCost(kind)+" salvage | "+game.CallInCapacity(kind)+" capacity\n"+(stats.Damage/stats.Interval).ToString("0.#")+" DPS"+(pair?" each":"")+"\nHull "+stats.Hull+" | Shields "+stats.Shield+(pair?" each":"");
         }
         public void RefreshText()
         {
             if(wave==null) return; wave.text="WAVE "+Mathf.Max(1,game.Wave).ToString("00"); resources.text="SALVAGE "+game.Salvage;
             launch.GetComponent<RectTransform>().sizeDelta=new Vector2(Mathf.Clamp(root.rect.width-1320,220,555),198);
-            contacts.text="FLEET "+game.FleetCapacityUsed+" / "+FleetRules.FleetLimit+"   HOSTILES "+game.EnemyCount+"   INBOUND "+game.IncomingCount; message.text=game.Message;
+            contacts.text="CAPACITY "+game.FleetCapacityUsed+" / "+FleetRules.FleetLimit+"   HOSTILES "+game.EnemyCount+"   INBOUND "+game.IncomingCount; message.text=game.Message;
             phase.text=game.SelectedReinforcement.HasValue?"HYPERSPACE CALL-IN / LEFT-CLICK AN ARRIVAL POINT; RIGHT-CLICK TO CANCEL":game.Phase==BattlePhase.Preparation ? "PREPARATION / REPAIR, CALL IN, AND POSITION YOUR FLEET" : "SURVIVAL ASSAULT / CALL IN REINFORCEMENTS AND PROTECT YOUR COMMAND SHIP";
             var ship=game.Flagship;
             if(ship!=null) { flagStatus.text=ship.Stats.Name+"\n"+Mathf.CeilToInt(ship.Hull)+" hull / "+Mathf.CeilToInt(ship.Shield)+" shields"; Fill(hullBar,ship.Hull/ship.MaxHull); Fill(shieldBar,ship.Shield/ship.MaxShield); }
@@ -219,7 +219,8 @@ namespace FleetSurvival
             if(game.Phase==BattlePhase.Defeat) endReport.text="Waves survived: "+Mathf.Max(0,game.Wave-1)+"\nEnemy capitals / fighters: "+game.RunTally.EnemyCapitals+" / "+game.RunTally.EnemyFighters+"\nFriendly capitals / fighters lost: "+game.RunTally.FriendlyCapitals+" / "+game.RunTally.FriendlyFighters+"\nBest survival: "+game.BestWave+" waves";
             foreach(var pair in buyButtons) pair.Value.interactable=game.CanCallIn(pair.Key);
             repair.interactable=game.Phase==BattlePhase.Preparation && !game.Paused && game.Salvage>=120 && game.Ships.Any(s=>s!=null && s.Friendly && s.Hull<s.MaxHull-.1f);
-            refit.interactable=game.Phase==BattlePhase.Preparation && !game.Paused && game.Salvage>=200;
+            refit.interactable=game.CanUpgradeWeapons;
+            refit.GetComponentInChildren<TextMeshProUGUI>().text=!game.HasUpgradeableShips?"WEAPON REFIT\nMAX +100% REACHED":"WEAPON REFIT\n200 / +10% damage\nMAX BONUS +100%";
             launch.interactable=game.Phase==BattlePhase.Preparation && !game.Paused; launch.GetComponentInChildren<TextMeshProUGUI>().text=game.Phase==BattlePhase.Combat?"ASSAULT IN PROGRESS":"LAUNCH WAVE "+(game.Wave+1);
         }
         static string TallyText(FleetBattleTally tally) => tally.EnemyCapitals+"\n"+tally.EnemyFighters+"\n"+tally.FriendlyCapitals+"\n"+tally.FriendlyFighters;
