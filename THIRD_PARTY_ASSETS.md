@@ -2,8 +2,10 @@
 
 ## Original orbital environment
 
-Planet surface, night lights, cloud density, and nebula textures were generated
-procedurally for this prototype. The globe mesh, planet lighting, atmosphere,
+Planet terrain, hive lights, dust density, and nebula textures were generated
+procedurally for this prototype. Geonosis's desert and rocky ring use the
+[official Databank](https://www.starwars.com/databank/geonosis) as a design reference.
+The globe, rocky ring, drifting asteroid meshes, planet lighting, atmosphere,
 weather layer, and starfield shaders are original project code. No external
 planet photographs or skybox images are used.
 
@@ -15,6 +17,12 @@ Short effects were extracted, converted to mono 44.1 kHz PCM, normalized, and
 given edge fades. The hyperspace charge was reversed and fitted to its 2.2-second
 countdown; the exit uses a separate excerpt. V-Wing firing audio is temporarily
 used by the V-19 interceptor at the user's request.
+
+Additional firing effects were derived from these supplied extracts: Acclamator
+and Arquitens from Venator; Providence, Recusant, and Lucrehulk from Munificent.
+Edits include pitch, duration, bass filtering, normalized levels, and edge fades.
+Source extract hashes and editing parameters are recorded in
+`Assets/FleetSurvival/Resources/Audio/DerivedSounds.json`.
 
 Original recording creators and license details were not provided. Source
 filenames, hashes, and extract timestamps are recorded in

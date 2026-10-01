@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.4.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.4.0).
+[Download the Windows v0.5.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.5.0).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -56,9 +56,13 @@ plays once per volley so all battery bolts do not stack the same recording.
 
 Hyperspace uses the supplied recording, edited into a 2.2-second charge and a
 separate exit effect. Extracts are mono 44.1 kHz PCM, with trimmed silence,
-normalized levels, and short edge fades. Other hulls and explosions retain
-synthesized effects. Tactical pause pauses battle audio. Extract timestamps and
+normalized levels, and short edge fades. Acclamator and Arquitens firing profiles
+are edited from Venator samples; Providence, Recusant, and Lucrehulk profiles use
+Munificent samples. Pitch, duration, and bass weight vary by hull while keeping
+the same faction sound character. Every ship now has recording-based weapon
+audio. Explosions retain synthesized effects. Tactical pause pauses battle audio. Extract timestamps and
 source hashes are recorded in `Assets/FleetSurvival/Resources/Audio/Sources.json`.
+The additional profiles are documented in `Resources/Audio/DerivedSounds.json`.
 
 Use the reinforcement panel or 1 / 2 / 3, then left-click an arrival point.
 A cyan hologram marks clear space; red means the position is blocked or outside
@@ -78,16 +82,18 @@ Repairs and weapon refits remain available between waves.
 
 ## Orbital environment
 
-The sector now overlooks a detailed ocean planet with continents, shallow coastal
-waters, polar ice, and settlement lights on its night side. A smooth globe and
-separate drifting cloud layer replace the old plain sphere. Lighting follows the
-sector's starlight, with a day/night boundary, ocean highlights, a thin blue
-atmosphere, and a faint warm glow near sunset.
+The sector now overlooks Geonosis: rusty desert terrain, rocky ridges, craters,
+sparse hive lights, and a rocky orbital ring, following the
+[official Geonosis reference](https://www.starwars.com/databank/geonosis).
+Lighting follows the sector's starlight, with a day/night boundary, warm thin
+atmosphere, and drifting dust haze. The planet uses original procedural terrain
+and an artistic orbital map.
 
 The backdrop uses three layers of fine stars with varied brightness and color,
 over a subtle teal and violet nebula. It surrounds the camera, so panning and
-zooming retain a continuous space background. Slow planet rotation and cloud
-drift stop during tactical pause. The environment has no colliders and does not
+zooming retain a continuous space background. Thirty-six irregular asteroids
+drift and tumble behind the battle plane at varied speeds. Planet rotation,
+dust drift, and asteroids stop during tactical pause. The environment has no colliders and does not
 block combat or reinforcement placement.
 
 ## Movement and formations
@@ -96,6 +102,11 @@ Capital ships accelerate gradually, brake before arriving, and turn through wide
 arcs. Cruisers and escorts handle faster; fighters and interceptors make much
 tighter turns in combat. Ships fly nose-first, with each imported model aligned
 to the game's forward direction.
+
+Idle fighter squadrons fly small staggered holding loops with banking and gentle
+vertical movement around their squadron anchor. Orders and combat blend the craft
+back into flight formation. Weapon muzzle positions follow the actual animated
+craft. Holding flight pauses with the battle and excludes destroyed fighters.
 
 A move order assigns the selected ships separate slots in a shared formation.
 The formation travels at the pace of its slowest member and slows further if ships

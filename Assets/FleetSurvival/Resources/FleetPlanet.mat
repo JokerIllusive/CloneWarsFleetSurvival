@@ -24,18 +24,19 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _CloudTex:
-        m_Texture: {fileID: 2800000, guid: 33ed701e3ce0ad0468baffd2cc245eb6, type: 3}
+        m_Texture: {fileID: 2800000, guid: 09dd354b85fe2044e88cc23e4add23de, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LightsTex:
-        m_Texture: {fileID: 2800000, guid: be235082109555e4faa61a1f2eee9f7c, type: 3}
+        m_Texture: {fileID: 2800000, guid: f854d0de6227b6541a0bd3262987d2e4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 99533b87f5aa7d0409b69f4bfd61e288, type: 3}
+        m_Texture: {fileID: 2800000, guid: d9709fdd6096617439922bc591f95811, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats: []
-    m_Colors: []
+    m_Colors:
+    - _RimColor: {r: 0.17, g: 0.065, b: 0.015, a: 1}
   m_BuildTextureStacks: []

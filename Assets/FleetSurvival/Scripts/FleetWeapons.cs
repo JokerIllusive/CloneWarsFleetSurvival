@@ -53,7 +53,8 @@ namespace FleetSurvival
                 queued.RemoveAt(i);
                 if(shot.Target==null || !shot.Target.Alive || shot.Target.IsArriving) continue;
                 if(ship.Squadron!=null && !ship.Squadron.IsActive(shot.Fighter)) continue;
-                ship.Game.SpawnBolt(ship,shot.Target,shot.Damage,transform.TransformPoint(shot.Origin),BoltColor);
+                Vector3 muzzle=ship.Squadron!=null?ship.Squadron.Muzzle(shot.Fighter,(shot.Origin-FleetSquadron.Offsets[shot.Fighter])/FleetSquadron.CraftScale):transform.TransformPoint(shot.Origin);
+                ship.Game.SpawnBolt(ship,shot.Target,shot.Damage,muzzle,BoltColor);
             }
         }
     }

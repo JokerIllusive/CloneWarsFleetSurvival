@@ -547,6 +547,7 @@ namespace FleetSurvival
                 CheckMovement(assertions);
                 CheckCombatUpgrades(assertions);
                 CheckSquadronsAndAudio(assertions);
+                CheckLivingSector(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -579,7 +580,7 @@ namespace FleetSurvival
             RecruitAt(ShipClass.Escort,new Vector3(0,0,0));
             for(int i=0;i<60;i++) Tick(.05f);
             cameraFocus=new Vector3(0,0,0); cameraDistance=75; PositionCamera();
-            Notify("Six-fighter squadrons / two Arquitens cruisers per call-in");
+            Notify("Geonosis / drifting asteroids / six-fighter holding formations");
             yield return null;
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-squadron-preview.png"));
             Begin(Faction.Republic); LaunchWave();
@@ -717,6 +718,33 @@ namespace FleetSurvival
             Check(CallInCount(ShipClass.Escort)==1 && CallInCost(ShipClass.Escort)==125,"Munificent escort retains single-ship call-in",assertions);
             Check(FleetSound.Weapon(Faction.Republic,ShipClass.Flagship).name.StartsWith("VenatorCannon") && FleetSound.Weapon(Faction.CIS,ShipClass.Frigate).name.StartsWith("MunificentCannon"),"Supplied capital cannon sounds are mapped to hulls",assertions);
             Check(FleetSound.Get("HyperspaceCharge")==Resources.Load<AudioClip>("Audio/HyperspaceCharge") && Mathf.Abs(FleetSound.Get("HyperspaceCharge").length-2.2f)<.01f && FleetSound.Get("HyperspaceExit")==Resources.Load<AudioClip>("Audio/HyperspaceExit"),"Edited recording supplies separate hyperspace stages",assertions);
+        }
+        void CheckLivingSector(List<string> assertions)
+        {
+            Begin(Faction.Republic);ClearBattle();
+            var squad=Spawn(Faction.Republic,ShipClass.Fighter,true,false,Vector3.zero);
+            var craft=squad.VisualRoot.GetChild(0);Vector3 initial=craft.localPosition;
+            for(int i=0;i<60;i++) Tick(.05f);
+            Check(squad.transform.position==Vector3.zero && Vector3.Distance(initial,craft.localPosition)>.1f,"Idle fighters fly while squadron anchor holds",assertions);
+            Vector3 held=craft.localPosition;Quaternion rotation=craft.localRotation;
+            TogglePause();Tick(2);
+            Check(craft.localPosition==held && craft.localRotation==rotation,"Tactical pause freezes fighter holding flight",assertions);TogglePause();
+            squad.MoveTo(new Vector3(0,0,30));for(int i=0;i<40;i++) Tick(.05f);
+            Check(Vector3.Distance(craft.localPosition,FleetSquadron.Offsets[0])<.01f && Quaternion.Angle(craft.localRotation,Quaternion.identity)<.1f && squad.transform.position.z>0,"Move orders restore squadron formation smoothly",assertions);
+            squad.Shield=0;squad.Damage(squad.MaxHull/6+.1f,craft.position);held=craft.localPosition;
+            for(int i=0;i<30;i++) Tick(.05f);
+            Check(!craft.gameObject.activeSelf && craft.localPosition==held,"Lost fighters do not continue holding animation",assertions);
+            var environment=FindObjectOfType<FleetEnvironment>();var asteroid=environment.transform.Find("Drifting asteroid 00");
+            initial=asteroid.localPosition;rotation=asteroid.localRotation;environment.TickVisuals(1);
+            Check(environment.AsteroidCount>=20 && asteroid.localPosition!=initial && asteroid.localRotation!=rotation,"Asteroids drift and tumble in the sector",assertions);
+            held=asteroid.localPosition;TogglePause();environment.TickVisuals(2);
+            Check(asteroid.localPosition==held,"Tactical pause freezes asteroids",assertions);TogglePause();
+            Check(environment.transform.Find("Geonosis")!=null && environment.transform.Find("Geonosis").Find("Geonosis rocky ring")!=null && environment.GetComponentsInChildren<Collider>().Length==0,"Geonosis and its ring leave command rays clear",assertions);
+            foreach(var faction in new[]{Faction.Republic,Faction.CIS}) foreach(ShipClass kind in Enum.GetValues(typeof(ShipClass)))
+            {
+                var clip=FleetSound.Weapon(faction,kind);var data=new float[clip.samples];bool loaded=clip.GetData(data,0);
+                Check(loaded && clip.name.Contains("Cannon") && data.Any(v=>Mathf.Abs(v)>.02f),"Every hull has non-silent recording-based fire "+faction+" "+kind,assertions);
+            }
         }
         static void Check(bool condition,string name,List<string> checks) { if(!condition) throw new Exception("Smoke test failed: "+name); checks.Add(name); }
         [Serializable] public sealed class SmokeReport { public bool passed; public string error; public string[] checks; }

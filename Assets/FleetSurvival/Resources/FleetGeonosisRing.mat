@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: FleetPlanetAtmosphere
-  m_Shader: {fileID: 4800000, guid: f291cd2eb61753c4faa86c666715db4b, type: 3}
+  m_Name: FleetGeonosisRing
+  m_Shader: {fileID: 4800000, guid: 6466d3ec314a5cd4c9c6dc2de7cef04b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -25,6 +25,5 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats: []
-    m_Colors:
-    - _Tint: {r: 0.65, g: 0.27, b: 0.08, a: 1}
+    m_Colors: []
   m_BuildTextureStacks: []

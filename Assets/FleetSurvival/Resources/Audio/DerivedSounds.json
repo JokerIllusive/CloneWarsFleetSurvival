@@ -1,0 +1,92 @@
+[
+  {
+    "clip": "AcclamatorCannon01.wav",
+    "derivedFrom": "VenatorCannon01.wav",
+    "sourceClipSHA256": "74de01c9a30f6fd4b59bb7fd5c108f914d71256903c553f4e43fb2c781fbb089",
+    "pitch": 0.97,
+    "maximumSeconds": 1.15,
+    "bassBlend": 0.12,
+    "durationSeconds": 1.1499773242630384
+  },
+  {
+    "clip": "AcclamatorCannon02.wav",
+    "derivedFrom": "VenatorCannon02.wav",
+    "sourceClipSHA256": "d8a7265127835b4cdd7b4eb85521bd6ab874703cfeb4224eb076fb7e3e750af4",
+    "pitch": 0.97,
+    "maximumSeconds": 1.15,
+    "bassBlend": 0.12,
+    "durationSeconds": 1.1499773242630384
+  },
+  {
+    "clip": "ArquitensCannon01.wav",
+    "derivedFrom": "VenatorCannon01.wav",
+    "sourceClipSHA256": "74de01c9a30f6fd4b59bb7fd5c108f914d71256903c553f4e43fb2c781fbb089",
+    "pitch": 1.18,
+    "maximumSeconds": 0.86,
+    "bassBlend": 0,
+    "durationSeconds": 0.86
+  },
+  {
+    "clip": "ArquitensCannon02.wav",
+    "derivedFrom": "VenatorCannon02.wav",
+    "sourceClipSHA256": "d8a7265127835b4cdd7b4eb85521bd6ab874703cfeb4224eb076fb7e3e750af4",
+    "pitch": 1.18,
+    "maximumSeconds": 0.86,
+    "bassBlend": 0,
+    "durationSeconds": 0.86
+  },
+  {
+    "clip": "ProvidenceCannon01.wav",
+    "derivedFrom": "MunificentCannon01.wav",
+    "sourceClipSHA256": "9d11210213750f6e8672439be6a8ea5457bde957f540375b0e4edb941bc8604a",
+    "pitch": 0.86,
+    "maximumSeconds": 1.5,
+    "bassBlend": 0.22,
+    "durationSeconds": 1.476734693877551
+  },
+  {
+    "clip": "ProvidenceCannon02.wav",
+    "derivedFrom": "MunificentCannon02.wav",
+    "sourceClipSHA256": "1958454fae11d79e777db5f11fd2e9ea6374d8953539219f33a6dfc67deb7a74",
+    "pitch": 0.86,
+    "maximumSeconds": 1.5,
+    "bassBlend": 0.22,
+    "durationSeconds": 1.127891156462585
+  },
+  {
+    "clip": "RecusantCannon01.wav",
+    "derivedFrom": "MunificentCannon01.wav",
+    "sourceClipSHA256": "9d11210213750f6e8672439be6a8ea5457bde957f540375b0e4edb941bc8604a",
+    "pitch": 1.06,
+    "maximumSeconds": 1.1,
+    "bassBlend": 0,
+    "durationSeconds": 1.1
+  },
+  {
+    "clip": "RecusantCannon02.wav",
+    "derivedFrom": "MunificentCannon02.wav",
+    "sourceClipSHA256": "1958454fae11d79e777db5f11fd2e9ea6374d8953539219f33a6dfc67deb7a74",
+    "pitch": 1.06,
+    "maximumSeconds": 1.1,
+    "bassBlend": 0,
+    "durationSeconds": 0.915079365079365
+  },
+  {
+    "clip": "LucrehulkCannon01.wav",
+    "derivedFrom": "MunificentCannon01.wav",
+    "sourceClipSHA256": "9d11210213750f6e8672439be6a8ea5457bde957f540375b0e4edb941bc8604a",
+    "pitch": 0.76,
+    "maximumSeconds": 1.5,
+    "bassBlend": 0.34,
+    "durationSeconds": 1.5
+  },
+  {
+    "clip": "LucrehulkCannon02.wav",
+    "derivedFrom": "MunificentCannon02.wav",
+    "sourceClipSHA256": "1958454fae11d79e777db5f11fd2e9ea6374d8953539219f33a6dfc67deb7a74",
+    "pitch": 0.76,
+    "maximumSeconds": 1.5,
+    "bassBlend": 0.34,
+    "durationSeconds": 1.2763038548752834
+  }
+]

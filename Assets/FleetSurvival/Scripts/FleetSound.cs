@@ -14,6 +14,8 @@ namespace FleetSurvival
             string prefix=null;
             if(UsesSuppliedCannon(faction,kind)) prefix=faction==Faction.Republic?"Venator":"Munificent";
             else if(kind==ShipClass.Fighter || kind==ShipClass.Interceptor) prefix=faction==Faction.CIS?"Vulture":kind==ShipClass.Fighter?"ARC170":"VWing";
+            else if(faction==Faction.Republic) prefix=kind==ShipClass.Frigate?"Acclamator":"Arquitens";
+            else prefix=kind==ShipClass.Flagship?"Providence":kind==ShipClass.Destroyer?"Recusant":"Lucrehulk";
             if(prefix!=null)
             {
                 string name=prefix+"Cannon0"+UnityEngine.Random.Range(1,3);

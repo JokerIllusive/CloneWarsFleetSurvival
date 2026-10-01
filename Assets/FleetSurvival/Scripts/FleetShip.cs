@@ -74,6 +74,7 @@ namespace FleetSurvival
                 }
             }
             FlyTowards(desired,move,dt);
+            if(Squadron!=null) Squadron.Tick(dt,!move && !inRange && !HasMoveOrder && CurrentSpeed<.4f);
             if(inRange && cooldown<=0 && Game.Phase==BattlePhase.Combat)
             {
                 Game.Fire(this,target,Stats.Damage*Destruction.Firepower*(Squadron!=null?Squadron.ActiveCount/6f:1)); cooldown=Stats.Interval;

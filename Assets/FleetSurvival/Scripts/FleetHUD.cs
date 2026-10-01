@@ -100,7 +100,7 @@ namespace FleetSurvival
             selected=Text(selection,"1 ship selected",new Vector2(0,1),new Vector2(20,-14),new Vector2(280,52),21,ink);
             Button(selection,"SELECT FLEET [TAB]",new Vector2(0,0),new Vector2(20,14),new Vector2(280,35),()=>game.SelectAll());
             var map=Panel(screen,"Tactical map",new Vector2(1,1),new Vector2(-24,-118),new Vector2(244,220),panelColor);
-            Text(map,"SECTOR MAP",new Vector2(0,1),new Vector2(15,-12),new Vector2(210,30),17,mutedText);
+            Text(map,"GEONOSIS SECTOR",new Vector2(0,1),new Vector2(15,-12),new Vector2(210,30),17,mutedText);
             mapDots=Rect(map,"Ship contacts",new Vector2(.5f,.5f),new Vector2(0,-12),new Vector2(210,158));
             var help=Panel(screen,"Controls",new Vector2(1,0),new Vector2(-24,285),new Vector2(300,265),panelColor);
             Text(help,"FLEET ORDERS",new Vector2(0,1),new Vector2(20,-18),new Vector2(265,32),18,cyan);

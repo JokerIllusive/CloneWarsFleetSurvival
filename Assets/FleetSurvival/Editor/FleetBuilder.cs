@@ -278,20 +278,25 @@ namespace FleetSurvival.Editor
         static void ConfigureEnvironment()
         {
             const string folder="Assets/FleetSurvival/Resources/Environment/";
-            foreach(string file in new[]{"PlanetSurface","PlanetLights","PlanetClouds","SpaceNebula"})
+            foreach(string file in new[]{"GeonosisSurface","GeonosisLights","GeonosisDust","SpaceNebula"})
             {
                 var importer=(TextureImporter)AssetImporter.GetAtPath(folder+file+".png");
                 if(importer==null) throw new Exception("Missing orbital environment texture: "+file);
-                importer.textureType=TextureImporterType.Default;importer.sRGBTexture=file=="PlanetSurface" || file=="SpaceNebula";
+                importer.textureType=TextureImporterType.Default;importer.sRGBTexture=file=="GeonosisSurface" || file=="SpaceNebula";
                 importer.alphaIsTransparency=false;importer.mipmapEnabled=true;importer.maxTextureSize=2048;
                 importer.wrapModeU=TextureWrapMode.Repeat;importer.wrapModeV=TextureWrapMode.Clamp;
                 importer.filterMode=FilterMode.Trilinear;importer.anisoLevel=4;
                 importer.textureCompression=file=="SpaceNebula"?TextureImporterCompression.Uncompressed:TextureImporterCompression.CompressedHQ;importer.SaveAndReimport();
             }
             EnvironmentMaterial("FleetSpaceSky","FleetSurvival/SpaceSky",new[]{"_MainTex","SpaceNebula"});
-            EnvironmentMaterial("FleetPlanet","FleetSurvival/PlanetSurface",new[]{"_MainTex","PlanetSurface","_LightsTex","PlanetLights","_CloudTex","PlanetClouds"});
-            EnvironmentMaterial("FleetPlanetClouds","FleetSurvival/PlanetClouds",new[]{"_MainTex","PlanetClouds"});
+            EnvironmentMaterial("FleetPlanet","FleetSurvival/PlanetSurface",new[]{"_MainTex","GeonosisSurface","_LightsTex","GeonosisLights","_CloudTex","GeonosisDust"});
+            EnvironmentMaterial("FleetPlanetClouds","FleetSurvival/PlanetClouds",new[]{"_MainTex","GeonosisDust"});
             EnvironmentMaterial("FleetPlanetAtmosphere","FleetSurvival/PlanetAtmosphere",new string[0]);
+            EnvironmentMaterial("FleetGeonosisRing","FleetSurvival/PlanetRing",new string[0]);
+            EnvironmentMaterial("FleetAsteroidRock","FleetSurvival/AsteroidRock",new string[0]);
+            Resources.Load<Material>("FleetPlanet").SetColor("_RimColor",new Color(.17f,.065f,.015f));
+            Resources.Load<Material>("FleetPlanetClouds").SetColor("_Tint",new Color(.64f,.36f,.15f));
+            Resources.Load<Material>("FleetPlanetAtmosphere").SetColor("_Tint",new Color(.65f,.27f,.08f));
             AssetDatabase.SaveAssets();
         }
         static void EnvironmentMaterial(string name,string shaderName,string[] textures)
@@ -342,7 +347,7 @@ namespace FleetSurvival.Editor
         public static void PreviewAudio()
         {
             var samples=new System.Collections.Generic.List<float>();
-            foreach(var name in new[]{"VenatorCannon01","MunificentCannon01","ARC170Cannon01","VultureCannon01","VWingCannon01","HyperspaceCharge","HyperspaceExit","Explosion"})
+            foreach(var name in new[]{"VenatorCannon01","AcclamatorCannon01","ArquitensCannon01","MunificentCannon01","ProvidenceCannon01","RecusantCannon01","LucrehulkCannon01","ARC170Cannon01","VultureCannon01","VWingCannon01","HyperspaceCharge","HyperspaceExit","Explosion"})
             {
                 var clip=FleetSound.Get(name); var data=new float[clip.samples]; clip.GetData(data,0);
                 samples.AddRange(data); samples.AddRange(new float[22050]);

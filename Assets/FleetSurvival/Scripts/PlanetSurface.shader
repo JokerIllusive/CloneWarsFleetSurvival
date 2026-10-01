@@ -5,6 +5,7 @@ Shader "FleetSurvival/PlanetSurface"
         _MainTex ("Surface and land mask", 2D) = "white" {}
         _LightsTex ("Night settlements", 2D) = "black" {}
         _CloudTex ("Cloud shadows", 2D) = "black" {}
+        _RimColor ("Horizon color", Color) = (.025,.15,.27,1)
     }
     SubShader
     {
@@ -18,6 +19,7 @@ Shader "FleetSurvival/PlanetSurface"
             sampler2D _MainTex,_LightsTex,_CloudTex;
             float3 _FleetSunDirection;
             float _FleetCloudOffset;
+            float4 _RimColor;
             struct appdata { float4 vertex:POSITION; float3 normal:NORMAL; float2 uv:TEXCOORD0; };
             struct v2f { float4 pos:SV_POSITION; float3 normal:TEXCOORD0; float3 world:TEXCOORD1; float2 uv:TEXCOORD2; };
             v2f vert(appdata v)
@@ -38,7 +40,7 @@ Shader "FleetSurvival/PlanetSurface"
                 float cities=tex2D(_LightsTex,i.uv).r*(1-smoothstep(-.15,.15,light));
                 color+=float3(1,.57,.19)*cities*.85;
                 float rim=pow(1-saturate(dot(n,view)),3.5);
-                color+=float3(.025,.15,.27)*rim*day;
+                color+=_RimColor.rgb*rim*day;
                 return fixed4(color,1);
             }
             ENDCG
