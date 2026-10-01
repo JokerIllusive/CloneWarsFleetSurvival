@@ -20,6 +20,11 @@ namespace FleetSurvival
         public FleetWeapons Weapons { get; private set; }
         public Transform VisualRoot { get; private set; }
         public FleetSquadron Squadron { get; private set; }
+        public FleetMovePreview MovePreview { get; private set; }
+        public int WeaponRefits { get; set; }
+        public float RefitBonus => Stats.Damage/FleetRules.Stats(Faction,Kind).Damage-1;
+        public float EffectiveVolleyDamage => Stats.Damage*Destruction.Firepower*(Squadron!=null?Squadron.ActiveCount/6f:1);
+        public float EffectiveDPS => EffectiveVolleyDamage/Stats.Interval;
         float cooldown, lastHit = -100;
         public bool Alive => Hull > 0;
 
@@ -34,6 +39,7 @@ namespace FleetSurvival
             Destruction=gameObject.AddComponent<ShipDestruction>(); Destruction.Initialize(this);
             if(kind==ShipClass.Fighter || kind==ShipClass.Interceptor) Squadron=new FleetSquadron(this);
             Weapons=gameObject.AddComponent<FleetWeapons>(); Weapons.Initialize(this);
+            if(friendly) { MovePreview=gameObject.AddComponent<FleetMovePreview>();MovePreview.Initialize(this); }
             var collider=gameObject.AddComponent<SphereCollider>(); collider.radius=Stats.Radius;
             SelectionRing=ShipVisuals.Ring(transform,Stats.Radius+1,FleetRules.Color(faction),.1f);
             SelectionRing.enabled=false;
@@ -77,7 +83,7 @@ namespace FleetSurvival
             if(Squadron!=null) Squadron.Tick(dt,!move && !inRange && !HasMoveOrder && CurrentSpeed<.4f);
             if(inRange && cooldown<=0 && Game.Phase==BattlePhase.Combat)
             {
-                Game.Fire(this,target,Stats.Damage*Destruction.Firepower*(Squadron!=null?Squadron.ActiveCount/6f:1)); cooldown=Stats.Interval;
+                Game.Fire(this,target,EffectiveVolleyDamage); cooldown=Stats.Interval;
             }
         }
 

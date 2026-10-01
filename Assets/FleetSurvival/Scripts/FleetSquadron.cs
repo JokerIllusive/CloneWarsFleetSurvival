@@ -48,7 +48,7 @@ namespace FleetSurvival
                 {
                     hull[closest]=0; ActiveCount--;
                     ship.Destruction.BreakModel(fighters[closest]);
-                    ship.Game.FighterLost(fighters[closest].position);
+                    ship.Game.FighterLost(ship,fighters[closest].position);
                     fighters[closest].gameObject.SetActive(false);
                 }
             }

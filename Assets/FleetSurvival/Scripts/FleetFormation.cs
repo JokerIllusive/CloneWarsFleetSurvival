@@ -16,6 +16,7 @@ namespace FleetSurvival
         public bool Arrived => (goal-center).sqrMagnitude<.01f && Speed<.05f;
         public int Count => offsets.Count;
         public Vector3 Goal => goal;
+        public Quaternion ArrivalRotation => rotation;
         public FleetFormation(FleetShip[] ships,Vector3 destination,bool attackMove)
         {
             foreach(var ship in ships) center+=ship.transform.position;

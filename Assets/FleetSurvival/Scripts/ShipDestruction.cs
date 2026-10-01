@@ -14,6 +14,7 @@ namespace FleetSurvival
         public int DamagedSections { get; private set; }
         public float Mobility => damageStage>=2?.65f:1;
         public float Firepower => damageStage>=1?.85f:1;
+        public string Status => damageStage>=3?"CRITICAL":damageStage>=2?"ENGINES DAMAGED":damageStage>=1?"HULL DAMAGED":"INTACT";
         public void Initialize(FleetShip owner)
         {
             ship=owner;

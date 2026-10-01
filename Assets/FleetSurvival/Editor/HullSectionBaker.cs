@@ -137,6 +137,7 @@ namespace FleetSurvival.Editor
                 var bounds=new Bounds(fragment.Vertices[0],Vector3.zero); foreach(var v in fragment.Vertices) bounds.Encapsulate(v);
                 hull.FragmentCenters[i]=bounds.center;
                 for(int v=0;v<fragment.Vertices.Count;v++) fragment.Vertices[v]-=bounds.center;
+                ThickenArmor(fragment,Mathf.Clamp(bounds.size.magnitude*.012f,.015f,.09f));
                 var mesh=new Mesh {name=source.name+" armor "+i,indexFormat=IndexFormat.UInt32};
                 mesh.SetVertices(fragment.Vertices); mesh.SetNormals(fragment.Normals); mesh.SetUVs(0,fragment.UV); mesh.SetUVs(1,fragment.UV2); mesh.SetTangents(fragment.Tangents); mesh.SetColors(fragment.Colors);
                 mesh.subMeshCount=materials.Length;
@@ -146,6 +147,38 @@ namespace FleetSurvival.Editor
                 var existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);
                 if(existing==null) AssetDatabase.CreateAsset(mesh,path); else { EditorUtility.CopySerialized(mesh,existing); UnityEngine.Object.DestroyImmediate(mesh); mesh=existing; }
                 hull.ArmorFragments[i]=mesh;
+            }
+        }
+        // Duplicate the inner skin and cap open borders so armor has solid edges in flight.
+        static void ThickenArmor(Section fragment,float thickness)
+        {
+            int count=fragment.Vertices.Count;
+            var edges=new Dictionary<ulong,(int a,int b,int count,Material material)>();
+            foreach(var pair in fragment.Triangles)
+            {
+                var indices=pair.Value;int original=indices.Count;
+                for(int t=0;t<original;t+=3)
+                {
+                    int a=indices[t],b=indices[t+1],c=indices[t+2];
+                    indices.Add(c+count);indices.Add(b+count);indices.Add(a+count);
+                    foreach(var edge in new[]{(a,b),(b,c),(c,a)})
+                    {
+                        ulong key=((ulong)(uint)Mathf.Min(edge.Item1,edge.Item2)<<32)|(uint)Mathf.Max(edge.Item1,edge.Item2);
+                        if(edges.TryGetValue(key,out var previous)) edges[key]=(previous.a,previous.b,previous.count+1,previous.material);
+                        else edges[key]=(edge.Item1,edge.Item2,1,pair.Key);
+                    }
+                }
+            }
+            for(int i=0;i<count;i++)
+            {
+                fragment.Vertices.Add(fragment.Vertices[i]-fragment.Normals[i].normalized*thickness);fragment.Normals.Add(-fragment.Normals[i]);
+                fragment.UV.Add(fragment.UV[i]);fragment.UV2.Add(fragment.UV2[i]);fragment.Tangents.Add(fragment.Tangents[i]);fragment.Colors.Add(fragment.Colors[i]*new Color(.25f,.25f,.25f,1));
+            }
+            foreach(var edge in edges.Values) if(edge.count==1)
+            {
+                var triangles=fragment.Triangles[edge.material];
+                triangles.Add(edge.a);triangles.Add(edge.a+count);triangles.Add(edge.b+count);
+                triangles.Add(edge.a);triangles.Add(edge.b+count);triangles.Add(edge.b);
             }
         }
         static Material OptimizeMaterial(Material source,string directory,int index,Dictionary<Texture,Texture> textures)

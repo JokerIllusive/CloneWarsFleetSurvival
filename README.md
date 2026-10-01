@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.5.1 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.5.1).
+[Download the Windows v0.6.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.6.0).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -41,6 +41,26 @@ an enemy flagship, and later waves introduce destroyers and carriers.
 
 Ships automatically fire at nearby targets. The command panel includes additional
 reinforcement types, weapon refits, sound controls, and a tactical map.
+
+## Tactical readouts
+
+The left battle tally separates enemy capitals destroyed, enemy individual fighters
+destroyed, friendly capitals lost, and friendly individual fighters lost. It shows
+the current wave and the whole run. Losing a squadron does not double-count its
+fighters; repairs restore craft without erasing earlier losses. A new wave resets
+only the wave column, and a new run resets both columns.
+
+Reinforcement buttons show salvage cost, base damage per second, hull, and shields.
+Arquitens pair costs cover both ships; its damage, hull, and shield values are per
+cruiser. Fighter button values are for a full six-craft squadron.
+
+Selecting one unit shows current and maximum hull/shields, effective damage per
+second, range, damage-adjusted speed, and hull condition. Its refit count and actual
+compounded weapon bonus are explicit: one refit adds 18%, two add about 39%.
+Effective damage includes damaged-hull penalties and surviving fighter count.
+Selecting several units shows combined hull, shields, damage, and refitted unit count.
+Refits apply to active friendly units present when purchased; new and arriving
+reinforcements require a later refit.
 
 ## Combat and reinforcements
 
@@ -118,6 +138,12 @@ fall behind. Spacing accounts for the largest hull, and the destination is adjus
 to keep the group inside the sector. Attack-move holds the advance while engaging;
 focus fire or a new order can detach selected ships from their previous formation.
 
+Friendly units with move orders retain blue ship silhouettes and heading chevrons
+at their final formation destinations, joined to their current positions by thin
+route lines. These show final slots rather than the formation's moving intermediate
+slots. They disappear on arrival, focus fire, destruction, or leaving the battle,
+and a new command updates only the commanded ships. They do not block selection.
+
 ## Ships
 
 - Republic: detailed Venator command ship, Venator destroyer/carrier, Acclamator,
@@ -144,15 +170,26 @@ Imported hull triangles are partitioned into six sections during authoring, with
 smaller shared armor fragment meshes for each section. At 65%, 35%, and 15%
 remaining hull, the area nearest the damaging hit becomes scorched, small armor
 fragments fly away, and breach fires appear. The hull remains visible and ship
-performance degrades. Only total destruction makes the large hull sections break
-away. Debris spins and drifts for a limited time; tactical pause freezes its motion.
+performance degrades. Armor fragments have an inner skin and capped borders so
+they retain visible thickness as they spin. Debris spins and drifts for a limited
+time; tactical pause freezes its motion.
 Repairing a surviving ship clears the scorches and fires and restores its stats.
 
-This is section-based breakup rather than arbitrary slicing at every impact. It
-preserves the supplied meshes and textures while avoiding mesh generation during
-combat. Gameplay textures are capped at 1024 pixels and compressed; original GLBs
-are preserved for future art changes. Full fracture caps and independent turret
-targeting are not implemented in this prototype.
+Destroyed capital ships leave recognizable charred wrecks for about 18 seconds.
+Five staggered secondary explosions shed smaller pieces without hiding half the
+hull. About 28% of capital wrecks suffer a reactor failure, showing a 2.6-second
+countdown and an orange danger ring before a larger detonation. The blast damages
+nearby ships on either side, with distance falloff, and can start further delayed
+ship destructions. Ships in hyperspace are immune. Ordinary wreck sequences end
+after 1.8 seconds; a wave clears after its pending wreck blasts finish. Tactical
+pause freezes countdowns, particles, and debris. Each wreck releases at most 18
+armor fragments. Fighter destruction remains a smaller, immediate breakup.
+
+This uses shared pre-baked hull and armor meshes rather than arbitrary cutting at
+each impact. The remaining hull stays visible through the staged explosions.
+Gameplay textures are capped at 1024 pixels and compressed; original GLBs are
+preserved for future art changes. Independent rotating turret targeting is not
+implemented in this prototype.
 
 ## Edit and build
 
