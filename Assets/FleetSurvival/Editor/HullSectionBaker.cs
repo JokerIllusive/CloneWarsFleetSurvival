@@ -9,7 +9,7 @@ namespace FleetSurvival.Editor
 {
     // Partition the real imported triangles into sections once during authoring.
     // Runtime ships share these meshes, avoiding geometry allocations during combat.
-    public static class HullSectionBaker
+    public static partial class HullSectionBaker
     {
         sealed class Section
         {
@@ -100,6 +100,8 @@ namespace FleetSurvival.Editor
                 piece.transform.SetParent(root.transform,false); piece.transform.localPosition=center;
                 piece.GetComponent<MeshFilter>().sharedMesh=mesh; piece.GetComponent<MeshRenderer>().sharedMaterials=materials.ToArray();
                 BakeArmorFragments(mesh,materials.ToArray(),directory,i,piece.GetComponent<HullSection>());
+                if(name!="ARC170" && name!="VWing" && name!="V19Torrent" && name!="Vulture" && name!="TriFighter" && name!="Hyena" && name!="YWing")
+                    BakeBreaches(mesh,materials.ToArray(),directory,i,piece.GetComponent<HullSection>());
             }
             AssetDatabase.SaveAssets(); Debug.Log("HULL_SECTIONS_BAKED "+name+" / "+root.transform.childCount+" sections");
         }

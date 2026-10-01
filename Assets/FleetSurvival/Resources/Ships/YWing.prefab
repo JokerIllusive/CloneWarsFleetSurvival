@@ -115,6 +115,11 @@ MonoBehaviour:
   - {x: 0.1253459, y: -0.000000044703484, z: 0.21774104}
   - {x: -0.12697667, y: -0.000000029802322, z: 0.6899779}
   - {x: 0.13705777, y: -0.021219626, z: 0.60717756}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &1867450571562034260
 GameObject:
   m_ObjectHideFlags: 0
@@ -230,6 +235,11 @@ MonoBehaviour:
   - {x: 0.12697673, y: 0.000000029802322, z: 0.21113437}
   - {x: -0.13705772, y: -0.021219566, z: 0.6071776}
   - {x: 0.12697676, y: 0.000000029802322, z: 0.689978}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &6744766744607240510
 GameObject:
   m_ObjectHideFlags: 0
@@ -345,6 +355,11 @@ MonoBehaviour:
   - {x: 0.20716703, y: 0.015513405, z: 0.22359163}
   - {x: -0.23809335, y: -0.018330112, z: 0.5632075}
   - {x: 0.24315824, y: -0.0142160505, z: 0.6539313}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &7125136809528296004
 GameObject:
   m_ObjectHideFlags: 0
@@ -460,6 +475,11 @@ MonoBehaviour:
   - {x: 0.22015858, y: -0.018330306, z: 0.21852621}
   - {x: -0.24315825, y: -0.014216006, z: 0.6539313}
   - {x: 0.23809329, y: -0.018330246, z: 0.5632074}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &7413253614722900043
 GameObject:
   m_ObjectHideFlags: 0
@@ -577,6 +597,11 @@ MonoBehaviour:
   - {x: 0.080193944, y: -0.01417321, z: 0.21032602}
   - {x: 0, y: 0, z: 0}
   - {x: 0.11500956, y: -0.05425012, z: 0.55347407}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &7528166222917271979
 GameObject:
   m_ObjectHideFlags: 0
@@ -731,3 +756,8 @@ MonoBehaviour:
   - {x: 0.021358743, y: -0.053671956, z: 0.14552194}
   - {x: -0.115009576, y: -0.05425012, z: 0.55347407}
   - {x: 0, y: 0, z: 0}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []

@@ -115,6 +115,11 @@ MonoBehaviour:
   - {x: 0.2134681, y: 0.022053331, z: 0.21204512}
   - {x: -0.23721749, y: 0.000000029802322, z: 0.5576718}
   - {x: 0.24116066, y: 0.021046102, z: 0.47032556}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &4427474400790048257
 GameObject:
   m_ObjectHideFlags: 0
@@ -230,6 +235,11 @@ MonoBehaviour:
   - {x: 0.23382586, y: -0.000000029802322, z: 0.39711097}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &5062729442657983904
 GameObject:
   m_ObjectHideFlags: 0
@@ -344,6 +354,11 @@ MonoBehaviour:
   - {x: 0.0009520054, y: 0.00000010430813, z: 0.13341624}
   - {x: -0.057740033, y: 0.00000020861626, z: 0.21787691}
   - {x: 0, y: 0, z: 0}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &5205102512935008131
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,6 +474,11 @@ MonoBehaviour:
   - {x: 0.22075179, y: 0, z: 0.20170958}
   - {x: -0.2411606, y: 0.021046102, z: 0.47032556}
   - {x: 0.23721752, y: 0.000000029802322, z: 0.5576718}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &5529723855977105116
 GameObject:
   m_ObjectHideFlags: 0
@@ -611,6 +631,11 @@ MonoBehaviour:
   - {x: 0.24618986, y: 0.15482673, z: 0.16455391}
   - {x: -0.23382586, y: -0.000000029802322, z: 0.40651014}
   - {x: 0.22023848, y: 0.14504662, z: 0.42157218}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &7720456002080667555
 GameObject:
   m_ObjectHideFlags: 0
@@ -725,3 +750,8 @@ MonoBehaviour:
   - {x: 0.03578779, y: 0.00000008940697, z: 0.18981665}
   - {x: 0, y: 0, z: 0}
   - {x: 0.057740033, y: 0.00000014901161, z: 0.21787691}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []

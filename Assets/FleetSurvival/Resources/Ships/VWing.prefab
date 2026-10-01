@@ -117,6 +117,11 @@ MonoBehaviour:
   - {x: 0.0096473545, y: 0.17149332, z: 0.4228642}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &748706825001149604
 GameObject:
   m_ObjectHideFlags: 0
@@ -231,6 +236,11 @@ MonoBehaviour:
   - {x: -0.015945077, y: -0.0128028095, z: -0.0048744082}
   - {x: 0, y: 0, z: 0}
   - {x: 0.2114755, y: 0.03909293, z: 0.7033009}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &1023084861322621049
 GameObject:
   m_ObjectHideFlags: 0
@@ -350,6 +360,11 @@ MonoBehaviour:
   - {x: 0.23234472, y: 0.281875, z: 0.057403266}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &4059420371786061341
 GameObject:
   m_ObjectHideFlags: 0
@@ -467,6 +482,11 @@ MonoBehaviour:
   - {x: 0.062437713, y: 0.073717564, z: 0.37128937}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &5408327555431483370
 GameObject:
   m_ObjectHideFlags: 0
@@ -618,6 +638,11 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: -0.21154286, y: 0.09202328, z: 0.31611195}
   - {x: 0, y: 0, z: 0}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []
 --- !u!1 &6635051412796152563
 GameObject:
   m_ObjectHideFlags: 0
@@ -739,3 +764,8 @@ MonoBehaviour:
   - {x: 0.23513523, y: 0, z: 0.28980458}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
+  InnerHull: {fileID: 0}
+  BreachFragments: []
+  BreachCenters: []
+  BreachNormals: []
+  BreachRadii: []

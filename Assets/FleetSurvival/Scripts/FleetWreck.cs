@@ -11,6 +11,9 @@ namespace FleetSurvival
         readonly HashSet<Mesh> released=new HashSet<Mesh>();
         readonly List<Transform> parts=new List<Transform>();
         readonly List<Vector3> partVelocities=new List<Vector3>(),partSpins=new List<Vector3>();
+        readonly List<Vector3> blastPath=new List<Vector3>();
+        public IReadOnlyList<Vector3> BlastPath => blastPath;
+        public int SecondaryBlasts => blasts;
         public IReadOnlyList<Transform> Parts => parts;
         Transform glow;
         LineRenderer danger;
@@ -30,8 +33,14 @@ namespace FleetSurvival
             wreck.blastDamage=110+source.Stats.Radius*12;
             var hull=Instantiate(source.VisualRoot,root.transform,false);hull.name="Scorched retained hull";
             wreck.sections=hull.GetComponentsInChildren<HullSection>();
+            foreach(var skin in hull.GetComponentsInChildren<HullDamageSkin>())if(skin.enabled && skin.MarkCount>0)
+            {
+                skin.RestoreAfterClone();skin.WreckTone();var section=skin.GetComponent<HullSection>();
+                for(int i=0;i<skin.MarkCount;i++)wreck.released.Add(section.BreachFragments[skin.PatchIndices[i]]);
+            }
             foreach(var renderer in hull.GetComponentsInChildren<MeshRenderer>())
             {
+                if(renderer.GetComponentInParent<HullDamageSkin>()!=null)continue;
                 var materials=renderer.sharedMaterials;
                 for(int sub=0;sub<materials.Length;sub++)
                 {
@@ -41,10 +50,11 @@ namespace FleetSurvival
                     renderer.SetPropertyBlock(tint,sub);
                 }
             }
+            wreck.BuildBlastPath(source.Destruction.LastImpact);
             var template=GameObject.CreatePrimitive(PrimitiveType.Sphere);template.SetActive(false);
             var core=new GameObject("Exposed reactor glow",typeof(MeshFilter),typeof(MeshRenderer));
             core.GetComponent<MeshFilter>().sharedMesh=template.GetComponent<MeshFilter>().sharedMesh;Destroy(template);
-            core.transform.SetParent(root.transform,false);core.transform.localPosition=Vector3.up*.8f;core.transform.localScale=Vector3.one*source.Stats.Radius*.35f;
+            core.transform.SetParent(root.transform,false);core.transform.localPosition=Vector3.up*.8f;core.transform.localScale=Vector3.one*Mathf.Clamp(source.Stats.Radius*.2f,.35f,.7f);
             core.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(new Color(1,.28f,.035f),true);wreck.glow=core.transform;
             core.SetActive(meltdown);
             if(meltdown)
@@ -69,10 +79,16 @@ namespace FleetSurvival
         {
             if(Complete || game==null || game.Paused) return;
             age+=dt;
-            if(Meltdown && glow!=null) glow.localScale=Vector3.one*radius*(.35f+.12f*Mathf.Sin(age*14)+.18f*age/2.6f);
+            if(Meltdown && glow!=null) glow.localScale=Vector3.one*Mathf.Clamp(radius*.2f,.35f,.7f)*(1+.2f*Mathf.Sin(age*14)+.5f*age/2.6f);
             while(age>=nextBlast && blasts<5)
             {
-                Vector3 point=transform.TransformPoint(new Vector3(Mathf.Sin(blasts*2.1f)*radius*.6f,.5f,Mathf.Cos(blasts*1.7f)*radius*.7f));
+                Vector3 point=transform.TransformPoint(blastPath[blasts]);
+                var section=sections.OrderBy(s=>s.GetComponent<MeshRenderer>().bounds.SqrDistance(point)).FirstOrDefault();
+                if(section!=null && section.InnerHull!=null)
+                {
+                    var skin=section.GetComponent<HullDamageSkin>();if(skin==null)skin=section.gameObject.AddComponent<HullDamageSkin>();
+                    if(skin.AddImpact(point))skin.WreckTone();
+                }
                 game.Burst(point,radius*.22f);ReleaseFragments(point,2);blasts++;nextBlast+=.33f;
             }
             if(Countdown>0) return;
@@ -82,6 +98,21 @@ namespace FleetSurvival
             ReleaseFragments(transform.position,8);
             SplitHusk();
             if(glow!=null) glow.gameObject.SetActive(false);if(danger!=null) danger.enabled=false;
+        }
+        void BuildBlastPath(Vector3 initial)
+        {
+            var unused=new List<HullSection>(sections);Vector3 previous=transform.TransformPoint(initial);
+            for(int i=0;i<5;i++)
+            {
+                HullSection best=null;Vector3 point=previous;float distance=float.MaxValue;
+                foreach(var section in unused)
+                {
+                    var candidates=section.BreachCenters;
+                    if(candidates==null || candidates.Length==0)candidates=new[]{Vector3.zero};
+                    foreach(var local in candidates){var world=section.transform.TransformPoint(local);float d=(world-previous).sqrMagnitude;if(d<distance){distance=d;best=section;point=world;}}
+                }
+                blastPath.Add(transform.InverseTransformPoint(point));previous=point;if(best!=null)unused.Remove(best);
+            }
         }
         void SplitHusk()
         {
@@ -103,13 +134,17 @@ namespace FleetSurvival
         {
             foreach(var section in sections.OrderBy(s=>(s.transform.position-point).sqrMagnitude))
             {
-                if(section.ArmorFragments==null) continue;
-                for(int i=0;i<section.ArmorFragments.Length && count>0 && fragments<18;i++)
+                var meshes=section.BreachFragments??section.ArmorFragments;
+                var centers=section.BreachCenters??section.FragmentCenters;
+                if(meshes==null || centers==null) continue;
+                var order=Enumerable.Range(0,meshes.Length).OrderBy(i=>(section.transform.TransformPoint(centers[i])-point).sqrMagnitude);
+                foreach(int i in order)
                 {
-                    var mesh=section.ArmorFragments[i];if(mesh==null || !released.Add(mesh)) continue;
+                    if(count<=0 || fragments>=18)break;
+                    var mesh=meshes[i];if(mesh==null || !released.Add(mesh)) continue;
                     var shard=new GameObject("Fractured wreck armor",typeof(MeshFilter),typeof(MeshRenderer),typeof(FleetDebris));game.AddCombatEffect(shard);shard.layer=section.gameObject.layer;
-                    shard.transform.SetPositionAndRotation(section.transform.TransformPoint(section.FragmentCenters[i]),section.transform.rotation);shard.transform.localScale=section.transform.lossyScale*.85f;
-                    shard.GetComponent<MeshFilter>().sharedMesh=mesh;shard.GetComponent<MeshRenderer>().sharedMaterials=section.GetComponent<MeshRenderer>().sharedMaterials;
+                    shard.transform.SetPositionAndRotation(section.transform.TransformPoint(centers[i]),section.transform.rotation);shard.transform.localScale=section.transform.lossyScale*.85f;
+                    shard.GetComponent<MeshFilter>().sharedMesh=mesh;var skin=section.GetComponent<HullDamageSkin>();shard.GetComponent<MeshRenderer>().sharedMaterials=skin!=null?skin.OriginalMaterials:section.GetComponent<MeshRenderer>().sharedMaterials;
                     var drift=shard.GetComponent<FleetDebris>();drift.Game=game;drift.Lifetime=8;
                     drift.Velocity=(shard.transform.position-transform.position).normalized*Random.Range(.35f,.65f)+Random.insideUnitSphere*.08f;drift.Spin=Random.onUnitSphere*Random.Range(3,8);
                     fragments++;count--;

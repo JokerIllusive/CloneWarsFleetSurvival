@@ -6,5 +6,9 @@ namespace FleetSurvival
     {
         public Mesh[] ArmorFragments;
         public Vector3[] FragmentCenters;
+        public Mesh InnerHull;
+        public Mesh[] BreachFragments;
+        public Vector3[] BreachCenters,BreachNormals;
+        public float[] BreachRadii;
     }
 }

@@ -246,7 +246,7 @@ namespace FleetSurvival
             RefreshText();
         }
         public void SetMute(bool value) { muteLabel.text=value?"SOUND OFF":"SOUND ON"; }
-        public void CapturePreview(string path,int width=1600,int height=900,bool mapOnly=false)
+        public void CapturePreview(string path,int width=1600,int height=900,bool mapOnly=false,bool shipOnly=false)
         {
             RefreshText(); UpdateMarkers();
             var camera=game.ViewCamera; var previousMode=canvas.renderMode;
@@ -255,6 +255,7 @@ namespace FleetSurvival
             camera.targetTexture=target; canvas.renderMode=RenderMode.ScreenSpaceCamera; canvas.worldCamera=camera; canvas.planeDistance=1;
             Canvas.ForceUpdateCanvases();RefreshText();UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(cardArea);UpdateMarkers();Canvas.ForceUpdateCanvases();camera.Render(); RenderTexture.active=target;
             var capture=new Rect(0,0,width,height);
+            if(shipOnly)capture=new Rect(width*.25f,height*.18f,width*.5f,height*.64f);
             if(mapOnly)
             {
                 var corners=new Vector3[4];((RectTransform)mapDots.parent).GetWorldCorners(corners);

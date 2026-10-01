@@ -351,6 +351,11 @@ namespace FleetSurvival.Editor
             EnsureResources();
             ConfigureAudioImports();
             PrepareSuppliedModel();
+            BuildPreparedModels();
+        }
+        // Reuse already baked models when iterating on runtime behavior or shaders.
+        public static void BuildPreparedModels()
+        {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             new GameObject("Fleet Survival",typeof(FleetGame));
             string scene="Assets/FleetSurvival/FleetSurvival.unity";

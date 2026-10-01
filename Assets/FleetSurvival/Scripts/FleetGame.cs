@@ -585,8 +585,8 @@ namespace FleetSurvival
                     Check(Flagship.GetComponentsInChildren<HullSection>().Any(s=>s.ArmorFragments!=null && s.ArmorFragments.Length>0),"Small armor fragment assets "+faction,assertions);
                     var block=new MaterialPropertyBlock(); bool burned=false;
                     foreach(var section in Flagship.GetComponentsInChildren<HullSection>())
-                    { section.GetComponent<MeshRenderer>().GetPropertyBlock(block,0); burned|=!block.isEmpty && block.GetColor("baseColorFactor").r<.5f; }
-                    Check(burned,"Hull scorch is applied to textured materials "+faction,assertions);
+                    { section.GetComponent<MeshRenderer>().GetPropertyBlock(block,0); burned|=block.GetFloat("_BreachCount")>0 && section.GetComponent<MeshRenderer>().sharedMaterials[0].HasProperty("baseColorTexture"); }
+                    Check(burned,"Localized hull scorch preserves the textured materials "+faction,assertions);
                     Check(RepairFleet() && Flagship.Hull==Flagship.MaxHull && Flagship.Destruction.DamagedSections==0,"Fleet repair restores sections "+faction,assertions);
                     bool clean=true;
                     foreach(var section in Flagship.GetComponentsInChildren<HullSection>())
@@ -616,6 +616,7 @@ namespace FleetSurvival
                 CheckBomberModels(assertions);
                 CheckDetailedMinimap(assertions);
                 CheckReactorDamage(assertions);
+                CheckLocalizedDestruction(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -709,6 +710,7 @@ namespace FleetSurvival
             yield return BomberFleetPreview();
             yield return DetailedMinimapPreview();
             yield return ReactorDamagePreview();
+            yield return LocalizedDestructionPreview();
             Application.Quit(0);
         }
         void CheckMovement(List<string> assertions)

@@ -165,7 +165,7 @@ namespace FleetSurvival
             if(!Targetable) return;
             lastHit=Game.BattleTime;
             float absorbed=Mathf.Min(Shield,amount); Shield-=absorbed; Hull-=amount-absorbed;
-            if(amount>absorbed) { if(Squadron!=null) Squadron.HullHit(amount-absorbed,impact); else Destruction.HullHit(impact); }
+            if(amount>absorbed) { if(Squadron!=null) Squadron.HullHit(amount-absorbed,impact); else Destruction.HullHit(impact,amount-absorbed); }
             if(Hull<=0) { Hull=0; Game.ShipDestroyed(this); }
         }
 

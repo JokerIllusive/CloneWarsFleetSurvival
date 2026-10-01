@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.8.4 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.4).
+[Download the Windows v0.8.5 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.5).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -283,8 +283,20 @@ after 1.8 seconds; a wave clears after its pending wreck blasts finish. Tactical
 pause freezes countdowns, particles, and debris. Each wreck releases at most 18
 armor fragments. Fighter destruction remains a smaller, immediate breakup.
 
-This uses shared pre-baked hull and armor meshes rather than arbitrary cutting at
-each impact. The remaining hull stays visible through the staged explosions.
+Capital hull hits now create small, localized jagged cutaways with charred edges,
+retained inner plating, and glowing structural ribs. Damage follows the actual
+impact rather than tinting an entire hull section when a health threshold is
+crossed. Substantial hull hits can expose armor before the first handling penalty.
+Repeated impacts at one breach do not duplicate fire emitters or armor shards;
+each capital retains at most eight impact breaches, with four per hull section.
+Shields protect the armor, and repairs restore original materials and close breaches.
+
+Five secondary explosions propagate from the last impact through neighboring
+pre-baked hull surfaces, opening smaller cutaways and shedding smaller thickened
+armor pieces. Impact scars and exposed lining persist into the three gently
+drifting wreck groups. This uses shared pre-baked hull, inner lining, and armor
+meshes; the cutaway shader reveals plating beneath the damaged surface. It does
+not dynamically cut arbitrary triangles or simulate individual internal rooms.
 Gameplay textures are capped at 1024 pixels and compressed; original GLBs are
 preserved for future art changes. Independent rotating turret targeting is not
 implemented in this prototype.
