@@ -680,6 +680,16 @@ namespace FleetSurvival
             SelectHangarBay(carrier.Hangar,0);Notify("HANGAR RECOVERY / docked squads keep capacity; lost fighters use salvage");
             yield return null;
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-hangar-service-preview.png"),1280,800);
+            foreach(var faction in new[]{Faction.Republic,Faction.CIS})
+            {
+                Begin(faction);ClearBattle();
+                Spawn(faction,ShipClass.Flagship,true,true,new Vector3(-18,0,-20));
+                var interceptors=Spawn(faction,ShipClass.Interceptor,true,false,Vector3.zero);interceptors.Selected=true;
+                Notify(faction==Faction.Republic?"REPUBLIC INTERCEPTORS / six V-Wings":"CIS INTERCEPTORS / six Droid Tri-fighters");
+                cameraFocus=Vector3.zero;cameraDistance=55;PositionCamera();
+                yield return null;
+                HUD.CapturePreview(Path.Combine(Application.persistentDataPath,faction==Faction.Republic?"fleet-vwing-preview.png":"fleet-trifighter-preview.png"));
+            }
             yield return new WaitForSecondsRealtime(.3f);
             Application.Quit(0);
         }
@@ -773,6 +783,14 @@ namespace FleetSurvival
                 Check(squad.Squadron!=null && squad.Squadron.ActiveCount==6 && squad.VisualRoot.childCount==6,"Six separate fighter models "+faction+" "+kind,assertions);
                 var fighter=squad.VisualRoot.GetChild(0); var renderer=fighter.GetComponentInChildren<MeshRenderer>();
                 Check(fighter.localScale.x<.6f && renderer.bounds.size.magnitude<7,"Reduced fighter visual scale "+faction+" "+kind,assertions);
+                if(kind==ShipClass.Interceptor)
+                {
+                    string model=faction==Faction.Republic?"VWing":"TriFighter";
+                    Check(Enumerable.Range(0,6).All(i=>squad.VisualRoot.GetChild(i).GetChild(0).name.StartsWith(model)),"All six interceptors use the supplied replacement model "+faction,assertions);
+                    var materials=squad.VisualRoot.GetComponentsInChildren<MeshRenderer>().SelectMany(r=>r.sharedMaterials).ToArray();
+                    Check(materials.Length>0 && materials.All(m=>m!=null && m.shader!=null && m.shader.name!="Hidden/InternalErrorShader") && materials.Any(m=>m.mainTexture!=null),"Replacement interceptor textured materials render correctly "+faction,assertions);
+                    Check(squad.Stats.Name.Contains(faction==Faction.Republic?"V-Wing":"Tri-fighter"),"Replacement interceptor name matches faction "+faction,assertions);
+                }
                 squad.Shield=0; squad.Damage(squad.MaxHull/6+.01f,fighter.position);
                 Check(squad.Squadron.ActiveCount==5 && !fighter.gameObject.activeSelf && squad.Alive,"Individual fighter loss leaves squadron alive "+faction+" "+kind,assertions);
                 var target=Spawn(faction==Faction.Republic?Faction.CIS:Faction.Republic,ShipClass.Frigate,false,false,new Vector3(0,0,20));

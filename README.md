@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.8.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.0).
+[Download the Windows v0.8.1 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.1).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -88,8 +88,9 @@ Republic bolts are blue and CIS bolts are red, following the space battle visual
 in the [official Clone Wars Christophsis reference](https://www.starwars.com/databank/Christophsis).
 Venators and Munificents use short firing samples edited from the supplied
 `Venator.wav` and `Munificent Class.wav` recordings. ARC-170 and Vulture squadrons
-use their own supplied recordings. V-19 interceptors temporarily use the supplied
-V-Wing firing recording. Each weapon profile has two sample variations. Audio
+use their own supplied recordings. V-Wing interceptors use the supplied
+V-Wing firing recording. Tri-fighter interceptors share the Vulture firing profile.
+Each weapon profile has two sample variations. Audio
 plays once per volley so all battery bolts do not stack the same recording.
 
 Hyperspace uses the supplied recording, edited into a 2.2-second charge and a
@@ -179,9 +180,9 @@ and a new command updates only the commanded ships. They do not block selection.
 ## Ships
 
 - Republic: detailed Venator command ship, Venator destroyer/carrier, Acclamator,
-  Arquitens, ARC-170, and V-19 Torrent.
+  Arquitens, ARC-170, and V-Wing interceptors.
 - CIS: Providence command ship, Munificent frigate/escort, Recusant,
-  Lucrehulk carrier, and Vulture droid squadrons.
+  Lucrehulk carrier, Vulture droid squadrons, and Tri-fighter interceptors.
 
 The first supplied Venator is preserved in the source project and model preview.
 The detailed second Venator is used in gameplay. Carrier hangars supplement the
@@ -276,8 +277,9 @@ The editor method `FleetSurvival.Editor.FleetBuilder.Build` creates a Windows bu
 `HullSectionBaker` builds the shared hull sections and optimized materials. Bootstrap
 scripts are editor-only and do not ship in the player.
 
-Model attributions and source links are in `THIRD_PARTY_ASSETS.md`. Providence and
-Recusant use CC BY-NC 4.0; the supplied prototype has no monetization. Other supplied
+Model attributions and source links are in `THIRD_PARTY_ASSETS.md`. Providence,
+Recusant, and the Tri-fighter use CC BY-NC 4.0; the supplied prototype has no
+monetization. Other supplied
 models use CC BY 4.0. This is an unofficial fan prototype.
 
 ## Source control

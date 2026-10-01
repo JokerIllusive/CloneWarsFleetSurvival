@@ -15,8 +15,8 @@ The user supplied `Venator.wav`, `Munificent Class.wav`, `ARC-170.wav`,
 `Vulture Droid.wav`, `V-Wing.wav`, and `Hyperspace.wav` for use in this prototype.
 Short effects were extracted, converted to mono 44.1 kHz PCM, normalized, and
 given edge fades. The hyperspace charge was reversed and fitted to its 2.2-second
-countdown; the exit uses a separate excerpt. V-Wing firing audio is temporarily
-used by the V-19 interceptor at the user's request.
+countdown; the exit uses a separate excerpt. V-Wing firing audio is
+used by V-Wing interceptors. Tri-fighter interceptors share the Vulture profile.
 
 Additional firing effects were derived from these supplied extracts: Acclamator
 and Arquitens from Venator; Providence, Recusant, and Lucrehulk from Munificent.
@@ -107,6 +107,36 @@ Source: https://sketchfab.com/3d-models/vulture-droid-5542f951834e4032b229ebdee1
 License: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 Changes: scaled, centered, oriented, and imported into Unity; source geometry and textures retained.
+
+## Republic V-wing Starfighter
+
+Creator: DrEgguin (https://sketchfab.com/DrEgguin)
+
+Source: https://sketchfab.com/3d-models/republic-v-wing-starfighter-0289dfef03054f099643150678ec830e
+
+License: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Supplied by the user as `republic_v-wing_starfighter.glb`. Creator, source, and
+license are also embedded in the GLB's asset metadata.
+
+Changes: scaled and centered for six-craft Republic interceptor squadrons; imported
+into Unity with shared hull meshes and textures reduced to a maximum of 1024 pixels.
+Replaces the V-19 Torrent in the playable interceptor role.
+
+## Droid Tri Fighter
+
+Creator: Steven (https://sketchfab.com/steventa3d)
+
+Source: https://sketchfab.com/3d-models/droid-tri-fighter-2517de834ad7418ea367ecdacd13524c
+
+License: CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+
+Supplied by the user as `droid_tri_fighter.glb`. Creator, source, and license are
+also embedded in the GLB's asset metadata.
+
+Changes: scaled and centered for six-craft CIS interceptor squadrons; imported into
+Unity with shared hull meshes and textures reduced to a maximum of 1024 pixels.
+Replaces the Vulture model in the interceptor role; ordinary Vulture squads remain.
 
 
 ## ARC-170 Starfighter

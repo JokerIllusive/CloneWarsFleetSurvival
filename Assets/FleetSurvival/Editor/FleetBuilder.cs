@@ -53,6 +53,8 @@ namespace FleetSurvival.Editor
             PrepareModel("star_wars_the_clone_wars_providence.glb","Providence",17);
             PrepareModel("star_wars_the_clone_wars_recusant_s3e2_style.glb","Recusant",13);
             PrepareModel("v-19_torrent_-_star_wars_-_clone_wars.glb","V19Torrent",3.6f);
+            PrepareModel("republic_v-wing_starfighter.glb","VWing",3.6f);
+            PrepareModel("droid_tri_fighter.glb","TriFighter",3.5f);
             PrepareModel("vulture_droid.glb","Vulture",3.5f);
             PrepareModel("arc-170_starfighter.glb","ARC170",4.2f);
             PrepareModel("arquitens-class_light_cruiser.glb","Arquitens",8.5f);
@@ -75,14 +77,14 @@ namespace FleetSurvival.Editor
             camera.orthographicSize=55; camera.aspect=1920f/2200; camera.transform.position=new Vector3(0,180,-120); camera.transform.LookAt(Vector3.zero); camera.farClipPlane=400;
             var font=Resources.Load<TMP_FontAsset>("CommanderFont");
             Label("CLONE WARS / YOUR SHIP ROSTER",new Vector3(0,0,61),1.25f,new Color(.86f,.94f,1),camera,font);
-            string[] names={"Venator","VenatorDetailed","Acclamator","Arquitens","ARC170","V19Torrent","Providence","Munificent","Recusant","Lucrehulk","Vulture"};
-            string[] titles={"VENATOR / FIRST MODEL","VENATOR / DETAILED MODEL","ACCLAMATOR","ARQUITENS","ARC-170","V-19 TORRENT","PROVIDENCE","MUNIFICENT","RECUSANT","LUCREHULK","VULTURE DROID"};
+            string[] names={"Venator","VenatorDetailed","Acclamator","Arquitens","ARC170","VWing","Providence","Munificent","Recusant","Lucrehulk","Vulture","TriFighter"};
+            string[] titles={"VENATOR / FIRST MODEL","VENATOR / DETAILED MODEL","ACCLAMATOR","ARQUITENS","ARC-170","V-WING","PROVIDENCE","MUNIFICENT","RECUSANT","LUCREHULK","VULTURE DROID","DROID TRI-FIGHTER"};
             for(int i=0;i<names.Length;i++)
             {
                 float x=-27+(i%3)*27, z=40-(i/3)*29;
                 var ship=UnityEngine.Object.Instantiate(Resources.Load<GameObject>("Ships/"+names[i])); ship.transform.position=new Vector3(x,0,z);
                 if(i==3 || i==7) ship.transform.localScale=Vector3.one*1.3f;
-                if(i==4 || i==5 || i==10) ship.transform.localScale=Vector3.one*3;
+                if(i==4 || i==5 || i==10 || i==11) ship.transform.localScale=Vector3.one*3;
                 ship.transform.rotation=Quaternion.Euler(0,-28,0);
                 if(i>=6 && i!=10) foreach(var part in ship.GetComponentsInChildren<Transform>()) part.gameObject.layer=8;
                 Label(titles[i],new Vector3(x,0,z-12),.65f,new Color(.88f,.94f,1),camera,font);
@@ -93,6 +95,35 @@ namespace FleetSurvival.Editor
             RenderTexture.active=null; camera.targetTexture=null; target.Release(); UnityEngine.Object.DestroyImmediate(target); UnityEngine.Object.DestroyImmediate(image);
             Debug.Log("COMPLETE_FLEET_PREVIEW_READY");
         }
+        public static void PreviewInterceptors()
+        {
+            EnsureResources();
+            PrepareModel("republic_v-wing_starfighter.glb","VWing",3.6f);
+            PrepareModel("droid_tri_fighter.glb","TriFighter",3.5f);
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            RenderSettings.ambientLight=new Color(.45f,.5f,.6f);RenderSettings.skybox=null;
+            var key=new GameObject("Interceptor key",typeof(Light)).GetComponent<Light>();key.type=LightType.Directional;key.intensity=1.6f;key.transform.rotation=Quaternion.Euler(50,-30,0);
+            var fill=new GameObject("Interceptor fill",typeof(Light)).GetComponent<Light>();fill.type=LightType.Directional;fill.intensity=.7f;fill.transform.rotation=Quaternion.Euler(-25,140,0);
+            var camera=new GameObject("Interceptor preview camera",typeof(Camera)).GetComponent<Camera>();
+            camera.orthographic=true;camera.orthographicSize=14;camera.aspect=1.6f;camera.farClipPlane=200;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.018f,.028f,.045f);
+            camera.transform.position=new Vector3(0,60,0);camera.transform.LookAt(Vector3.zero,Vector3.forward);
+            var font=Resources.Load<TMP_FontAsset>("CommanderFont");
+            string[] names={"VWing","TriFighter"};string[] titles={"REPUBLIC / V-WING","CIS / DROID TRI-FIGHTER"};
+            for(int i=0;i<2;i++)
+            {
+                Vector3 p=new Vector3(i==0?-11:11,0,0);
+                var prefab=Resources.Load<GameObject>("Ships/"+names[i]);if(prefab==null)throw new Exception("Missing interceptor model: "+names[i]);
+                var model=UnityEngine.Object.Instantiate(prefab);model.transform.position=p;model.transform.localScale=Vector3.one*3;
+                Label(titles[i],p+new Vector3(0,0,-9),.65f,new Color(.85f,.93f,1),camera,font);
+                var arrow=new GameObject("Forward +Z",typeof(LineRenderer)).GetComponent<LineRenderer>();arrow.sharedMaterial=ShipVisuals.Material(new Color(.15f,1,.5f),true);arrow.startWidth=arrow.endWidth=.09f;arrow.positionCount=5;
+                arrow.SetPositions(new[]{p+new Vector3(7,3,-4),p+new Vector3(7,3,5),p+new Vector3(6.3f,3,3.7f),p+new Vector3(7,3,5),p+new Vector3(7.7f,3,3.7f)});
+            }
+            Label("INTERCEPTOR MODELS / GREEN ARROWS SHOW FLIGHT DIRECTION",new Vector3(0,0,11),.55f,new Color(.45f,.7f,.85f),camera,font);
+            SaveRender(camera,"Interceptor-forward-preview.png");
+            camera.transform.position=new Vector3(0,32,-24);camera.transform.LookAt(Vector3.zero);camera.orthographicSize=14;
+            foreach(var label in UnityEngine.Object.FindObjectsOfType<TextMeshPro>())label.transform.rotation=camera.transform.rotation;
+            SaveRender(camera,"Interceptor-models-preview.png");
+        }
         public static void PreviewForwardDirections()
         {
             EnsureResources();
@@ -102,14 +133,14 @@ namespace FleetSurvival.Editor
             var camera=new GameObject("Top-down forward preview",typeof(Camera)).GetComponent<Camera>();
             camera.clearFlags=CameraClearFlags.SolidColor; camera.backgroundColor=new Color(.015f,.02f,.03f); camera.orthographic=true;
             camera.orthographicSize=55; camera.aspect=.8f; camera.transform.position=new Vector3(0,180,0); camera.transform.LookAt(Vector3.zero,Vector3.forward); camera.farClipPlane=400;
-            string[] names={"Venator","VenatorDetailed","Acclamator","Arquitens","ARC170","V19Torrent","Providence","Munificent","Recusant","Lucrehulk","Vulture"};
+            string[] names={"Venator","VenatorDetailed","Acclamator","Arquitens","ARC170","VWing","Providence","Munificent","Recusant","Lucrehulk","Vulture","TriFighter"};
             var font=Resources.Load<TMP_FontAsset>("CommanderFont");
             for(int i=0;i<names.Length;i++)
             {
                 Vector3 position=new Vector3(-28+(i%3)*28,0,38-(i/3)*25);
                 var model=UnityEngine.Object.Instantiate(Resources.Load<GameObject>("Ships/"+names[i])); model.transform.position=position;
                 if(i==3 || i==7) model.transform.localScale=Vector3.one*1.4f;
-                if(i==4 || i==5 || i==10) model.transform.localScale=Vector3.one*2.6f;
+                if(i==4 || i==5 || i==10 || i==11) model.transform.localScale=Vector3.one*2.6f;
                 var arrow=new GameObject("Forward +Z",typeof(LineRenderer)).GetComponent<LineRenderer>();
                 arrow.sharedMaterial=ShipVisuals.Material(new Color(.1f,1,.4f),true); arrow.startWidth=arrow.endWidth=.13f; arrow.positionCount=5;
                 arrow.SetPositions(new[]{position+new Vector3(10,3,-6),position+new Vector3(10,3,6),position+new Vector3(9,3,4),position+new Vector3(10,3,6),position+new Vector3(11,3,4)});

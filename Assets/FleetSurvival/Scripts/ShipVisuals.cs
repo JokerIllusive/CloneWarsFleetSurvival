@@ -99,8 +99,8 @@ namespace FleetSurvival
         static void BuildSingle(Transform root, Faction faction, ShipClass kind)
         {
             string assetName = faction==Faction.Republic
-                ? (kind==ShipClass.Flagship || kind==ShipClass.Destroyer || kind==ShipClass.Carrier ? "VenatorDetailed" : kind==ShipClass.Frigate ? "Acclamator" : kind==ShipClass.Escort ? "Arquitens" : kind==ShipClass.Interceptor ? "V19Torrent" : "ARC170")
-                : (kind==ShipClass.Flagship ? "Providence" : kind==ShipClass.Frigate || kind==ShipClass.Escort ? "Munificent" : kind==ShipClass.Destroyer ? "Recusant" : kind==ShipClass.Carrier ? "Lucrehulk" : "Vulture");
+                ? (kind==ShipClass.Flagship || kind==ShipClass.Destroyer || kind==ShipClass.Carrier ? "VenatorDetailed" : kind==ShipClass.Frigate ? "Acclamator" : kind==ShipClass.Escort ? "Arquitens" : kind==ShipClass.Interceptor ? "VWing" : "ARC170")
+                : (kind==ShipClass.Flagship ? "Providence" : kind==ShipClass.Frigate || kind==ShipClass.Escort ? "Munificent" : kind==ShipClass.Destroyer ? "Recusant" : kind==ShipClass.Carrier ? "Lucrehulk" : kind==ShipClass.Interceptor ? "TriFighter" : "Vulture");
             if(assetName!=null)
             {
                 var supplied=Resources.Load<GameObject>("Ships/"+assetName);
