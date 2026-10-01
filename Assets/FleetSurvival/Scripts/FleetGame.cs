@@ -54,6 +54,10 @@ namespace FleetSurvival
         void Awake()
         {
             Application.targetFrameRate=60;
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+            var desktop=Screen.currentResolution;
+            Screen.SetResolution(desktop.width,desktop.height,FullScreenMode.FullScreenWindow);
+#endif
             BestWave=PlayerPrefs.GetInt("FleetSurvival.BestWave",0);
             SmokeMode=Environment.GetCommandLineArgs().Contains("-fleet-smoke-test");
             BuildWorld();
@@ -509,6 +513,7 @@ namespace FleetSurvival
         IEnumerator SmokeTest()
         {
             yield return null;
+            Debug.Log("FLEET_DISPLAY "+Screen.fullScreenMode+" "+Screen.width+"x"+Screen.height+" desktop "+Screen.currentResolution.width+"x"+Screen.currentResolution.height);
             var assertions=new List<string>();
             try
             {

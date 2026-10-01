@@ -4,10 +4,14 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.5.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.5.0).
+[Download the Windows v0.5.1 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.5.1).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
+
+The Windows game launches in borderless fullscreen at your monitor's desktop resolution,
+including when upgrading from an older windowed build. Alt+Enter switches between
+fullscreen and windowed mode; Alt+F4 closes the game.
 
 Choose the Galactic Republic or Separatist Alliance. Each run begins with a command ship,
 two cruisers/frigates, two fighter squadrons, and 220 salvage. Position your ships, buy

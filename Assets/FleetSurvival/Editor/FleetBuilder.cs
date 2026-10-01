@@ -321,7 +321,8 @@ namespace FleetSurvival.Editor
             EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(scene,true)};
             PlayerSettings.companyName="FleetPrototype"; PlayerSettings.productName="Clone Wars Fleet Survival";
             PlayerSettings.defaultScreenWidth=1600; PlayerSettings.defaultScreenHeight=900;
-            PlayerSettings.fullScreenMode=FullScreenMode.Windowed; PlayerSettings.runInBackground=true;
+            PlayerSettings.fullScreenMode=FullScreenMode.FullScreenWindow;
+            PlayerSettings.defaultIsNativeResolution=true; PlayerSettings.runInBackground=true;
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Standalone,ScriptingImplementation.Mono2x);
             AssetDatabase.SaveAssets();
             string output=Path.GetFullPath(Path.Combine(Application.dataPath,"../../Windows/CloneWarsFleetSurvival.exe"));
