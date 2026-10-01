@@ -637,10 +637,15 @@ namespace FleetSurvival
             breached.Damage(breached.Shield+breached.MaxHull*.43f,new Vector3(0,0,8));
             var doomed=Spawn(Faction.Republic,ShipClass.Destroyer,true,false,new Vector3(20,0,3));
             doomed.Hull=0;ShipDestroyed(doomed,true);
+            var driftingWreck=wrecks.Last();
             cameraFocus=new Vector3(0,0,3); cameraDistance=84; PositionCamera();
             Notify("STAGED DESTRUCTION / intact hull, fractured armor and reactor warning");
             yield return new WaitForSecondsRealtime(.6f);
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-destruction-preview.png"));
+            driftingWreck.Tick(3);driftingWreck.Drift(10);
+            Notify("DERELICT WRECK / three large pieces slowly drifting apart");
+            yield return new WaitForSecondsRealtime(.95f);
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-wreck-drift-preview.png"));
             yield return new WaitForSecondsRealtime(.3f);
             Application.Quit(0);
         }
@@ -860,6 +865,12 @@ namespace FleetSurvival
             Check(wreck.Complete && !Ships.Contains(nearby) && RunTally.FriendlyCapitals==1 && PendingWrecks==2,"Delayed reactor blast can trigger another ship's destruction",assertions);
             Check(distant.Hull==distant.MaxHull && arriving.Hull==arriving.MaxHull,"Reactor blast respects distance and hyperspace immunity",assertions);
             Check(wreck.FragmentCount<=18 && wreck.GetComponentsInChildren<HullSection>().All(s=>s.gameObject.activeSelf),"Bounded fragments leave recognizable wreck sections",assertions);
+            var partPositions=wreck.Parts.Select(p=>p.position).ToArray();
+            Check(wreck.Parts.Count==3 && wreck.GetComponentsInChildren<HullSection>().All(s=>s.gameObject.activeSelf),"Capital husk separates into three visible large parts",assertions);
+            float separation=Vector3.Distance(partPositions[0],partPositions[2]);wreck.Drift(4);
+            Check(wreck.Parts.Select((p,i)=>Vector3.Distance(p.position,partPositions[i])).All(d=>d>0 && d<1.5f) && Vector3.Distance(wreck.Parts[0].position,wreck.Parts[2].position)>separation+1,"Large wreck parts gently separate without launching across the sector",assertions);
+            partPositions=wreck.Parts.Select(p=>p.position).ToArray();TogglePause();wreck.Drift(4);
+            Check(wreck.Parts.Select((p,i)=>p.position==partPositions[i]).All(v=>v),"Tactical pause freezes separated wreck parts",assertions);TogglePause();
             Begin(Faction.CIS);Check(RunTally.EnemyCapitals==0 && RunTally.FriendlyFighters==0 && PendingWrecks==0,"New run resets tally and clears pending reactor events",assertions);
         }
         [Serializable] public sealed class SmokeReport { public bool passed; public string error; public string[] checks; }

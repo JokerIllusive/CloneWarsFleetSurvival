@@ -9,6 +9,9 @@ namespace FleetSurvival
         FleetGame game;
         HullSection[] sections;
         readonly HashSet<Mesh> released=new HashSet<Mesh>();
+        readonly List<Transform> parts=new List<Transform>();
+        readonly List<Vector3> partVelocities=new List<Vector3>(),partSpins=new List<Vector3>();
+        public IReadOnlyList<Transform> Parts => parts;
         Transform glow;
         LineRenderer danger;
         float age,nextBlast=.18f,radius,blastDamage;
@@ -48,8 +51,18 @@ namespace FleetSurvival
                 wreck.danger=ShipVisuals.Ring(root.transform,source.Stats.Radius*2.8f,new Color(.8f,.25f,.05f),.1f,"Reactor blast radius");
                 owner.Notify("REACTOR FAILURE: "+source.Stats.Name+" wreck. Move ships outside its orange blast ring.");
             }
-            var drift=root.AddComponent<FleetDebris>();drift.Game=owner;drift.Lifetime=18;drift.Velocity=source.transform.forward*source.CurrentSpeed*.1f;drift.Spin=Vector3.up*.7f;
+            var drift=root.AddComponent<FleetDebris>();drift.Game=owner;drift.Lifetime=18;drift.Velocity=source.transform.forward*Mathf.Min(source.CurrentSpeed*.05f,.25f);drift.Spin=Vector3.up*.3f;
             return wreck;
+        }
+        void Update() { Drift(Time.deltaTime); }
+        public void Drift(float dt)
+        {
+            if(!Complete || game==null || game.Paused || game.Phase==BattlePhase.Menu) return;
+            for(int i=0;i<parts.Count;i++)
+            {
+                parts[i].localPosition+=partVelocities[i]*dt;
+                parts[i].localRotation=Quaternion.Euler(partSpins[i]*dt)*parts[i].localRotation;
+            }
         }
         public void Tick(float dt)
         {
@@ -66,7 +79,24 @@ namespace FleetSurvival
             if(Meltdown) { game.Burst(transform.position,radius*1.45f);game.ReactorBlast(transform.position,radius*2.8f,blastDamage); }
             else game.Burst(transform.position,radius*.55f);
             ReleaseFragments(transform.position,8);
+            SplitHusk();
             if(glow!=null) glow.gameObject.SetActive(false);if(danger!=null) danger.enabled=false;
+        }
+        void SplitHusk()
+        {
+            var ordered=sections.OrderBy(s=>transform.InverseTransformPoint(s.GetComponent<MeshRenderer>().bounds.center).z).ToArray();
+            int count=Mathf.Min(3,ordered.Length);
+            for(int i=0;i<count;i++)
+            {
+                int start=i*ordered.Length/count,end=(i+1)*ordered.Length/count;
+                Vector3 center=Vector3.zero;for(int n=start;n<end;n++) center+=ordered[n].GetComponent<MeshRenderer>().bounds.center;center/=(end-start);
+                var part=new GameObject("Slowly drifting wreck section "+(i+1)).transform;part.SetParent(transform,false);part.position=center;
+                for(int n=start;n<end;n++) ordered[n].transform.SetParent(part,true);
+                parts.Add(part);
+                float side=i%2==0?1:-1;
+                partVelocities.Add(new Vector3(side*.09f,side*.025f,(i-(count-1)*.5f)*.32f));
+                partSpins.Add(new Vector3(side*.5f,(i-(count-1)*.5f)*1.3f,.3f));
+            }
         }
         void ReleaseFragments(Vector3 point,int count)
         {
@@ -80,7 +110,7 @@ namespace FleetSurvival
                     shard.transform.SetPositionAndRotation(section.transform.TransformPoint(section.FragmentCenters[i]),section.transform.rotation);shard.transform.localScale=section.transform.lossyScale*.85f;
                     shard.GetComponent<MeshFilter>().sharedMesh=mesh;shard.GetComponent<MeshRenderer>().sharedMaterials=section.GetComponent<MeshRenderer>().sharedMaterials;
                     var drift=shard.GetComponent<FleetDebris>();drift.Game=game;drift.Lifetime=8;
-                    drift.Velocity=(shard.transform.position-transform.position).normalized*Random.Range(2.5f,6)+Random.insideUnitSphere*1.5f;drift.Spin=Random.onUnitSphere*Random.Range(16,48);
+                    drift.Velocity=(shard.transform.position-transform.position).normalized*Random.Range(.35f,.65f)+Random.insideUnitSphere*.08f;drift.Spin=Random.onUnitSphere*Random.Range(3,8);
                     fragments++;count--;
                 }
                 if(count<=0 || fragments>=18) break;

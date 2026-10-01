@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.6.1 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.6.1).
+[Download the Windows v0.6.2 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.6.2).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -192,6 +192,12 @@ time; tactical pause freezes its motion.
 Repairing a surviving ship clears the scorches and fires and restores its stats.
 
 Destroyed capital ships leave recognizable charred wrecks for about 18 seconds.
+After the final blast, the husk separates into three larger groups of hull sections
+that gently drift apart at less than 0.4 world units per second relative to the wreck,
+with slow rotation. Whole-wreck forward drift is capped at 0.25 units per second.
+Small wreck armor fragments also drift slowly, rather than being thrown across the
+sector. All large hull sections remain visible until the wreck fades and despawns;
+the separated parts stop during tactical pause and clear when leaving the battle.
 Five staggered secondary explosions shed smaller pieces without hiding half the
 hull. About 28% of capital wrecks suffer a reactor failure, showing a 2.6-second
 countdown and an orange danger ring before a larger detonation. The blast damages
