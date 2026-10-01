@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.6.2 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.6.2).
+[Download the Windows v0.7.0 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.7.0).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -32,6 +32,8 @@ an enemy flagship, and later waves introduce destroyers and carriers.
 | Select the whole fleet | Tab |
 | Select and center the command ship | Q |
 | Pan camera | WASD, arrow keys, or middle mouse drag |
+| Jump/pan across the sector | Left click or drag on the minimap |
+| Expand/collapse controls guide | H or the top-right ? button |
 | Zoom | Mouse wheel |
 | Pause/resume | Space or Esc |
 | Choose fighter / frigate / destroyer call-in | 1 / 2 / 3, during combat or between waves |
@@ -43,6 +45,14 @@ Ships automatically fire at nearby targets. The command panel includes additiona
 reinforcement types, weapon refits, sound controls, and a tactical map.
 
 ## Tactical readouts
+
+The command bar and reinforcement dock are compact, leaving more space for the
+battlefield. All six reinforcement cards fit in one row and retain their baseline
+ship stats. Repairs, refits, and wave launch sit together on the right. The controls
+guide opens on demand. The minimap includes a sector grid, boundary, and live camera
+footprint; selected units are white, allies blue, and enemies orange. Healthy
+unselected ships hide their world status bars; selected, damaged, and command ships
+keep their readouts.
 
 The left battle tally separates enemy capitals destroyed, enemy individual fighters
 destroyed, friendly capitals lost, and friendly individual fighters lost. It shows
@@ -131,8 +141,13 @@ and an artistic orbital map.
 
 The backdrop uses three layers of fine stars with varied brightness and color,
 over a subtle teal and violet nebula. It surrounds the camera, so panning and
-zooming retain a continuous space background. Thirty-six irregular asteroids
-drift and tumble behind the battle plane at varied speeds. Planet rotation,
+zooming retain a continuous space background. The detailed sector has 112 irregular
+asteroids, with larger rocks and denser belts along its edges, plus two abandoned
+orbital shipyards with docking gantries, trusses, service lights, and 24 drifting
+scrap pieces. Subtle particulate clouds add depth behind the battle plane. Desert
+lighting adds small terrain relief, and the orbital ring has clumps and gaps rather
+than uniform stripes. The full battlefield grid is replaced with a thin perimeter
+and ticks; the minimap retains the navigational grid. Planet rotation,
 dust drift, and asteroids stop during tactical pause. The environment has no colliders and does not
 block combat or reinforcement placement.
 

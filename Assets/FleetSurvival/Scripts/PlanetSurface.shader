@@ -33,8 +33,15 @@ Shader "FleetSurvival/PlanetSurface"
                 float light=dot(n,sun),day=smoothstep(-.06,.24,light);
                 float4 surface=tex2D(_MainTex,i.uv);
                 float cloud=tex2D(_CloudTex,i.uv+float2(_FleetCloudOffset,0)).r;
-                float diffuse=max(0,light);
-                float3 color=surface.rgb*(.045+diffuse*1.8)*(1-cloud*.25*day);
+                // Height gradients give the existing desert texture small ridges and crater relief.
+                float height=dot(surface.rgb,float3(.3,.5,.2));
+                float hx=dot(tex2D(_MainTex,i.uv+float2(.0008,0)).rgb,float3(.3,.5,.2))-height;
+                float hy=dot(tex2D(_MainTex,i.uv+float2(0,.0008)).rgb,float3(.3,.5,.2))-height;
+                float3 east=normalize(cross(float3(0,1,0),n)+float3(.0001,0,0));
+                float3 north=normalize(cross(n,east));
+                float3 relief=normalize(n-east*hx*4-north*hy*4);
+                float diffuse=max(0,dot(relief,sun));
+                float3 color=surface.rgb*(.045+diffuse*1.5)*(1-cloud*.25*day);
                 float spec=pow(saturate(dot(n,normalize(view+sun))),90)*(1-surface.a)*day;
                 color+=float3(.8,.9,1)*spec*.38;
                 float cities=tex2D(_LightsTex,i.uv).r*(1-smoothstep(-.15,.15,light));

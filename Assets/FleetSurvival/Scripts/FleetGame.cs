@@ -94,12 +94,12 @@ namespace FleetSurvival
             cisFill.cullingMask=1<<8; cisFill.transform.rotation=Quaternion.Euler(60,-35,0);
             RenderSettings.ambientLight=new Color(.23f,.3f,.43f);
             new GameObject("Orbital environment",typeof(FleetEnvironment)).GetComponent<FleetEnvironment>().Initialize(this,world,-light.transform.forward);
-            var boundary=ShipVisuals.Ring(world,FleetRules.ArenaRadius,new Color(.06f,.2f,.32f),.08f,"Sector boundary");
+            var boundary=ShipVisuals.Ring(world,FleetRules.ArenaRadius,new Color(.04f,.12f,.18f),.045f,"Sector boundary");
             boundary.transform.position=Vector3.down;
-            for(int i=-6;i<=6;i++)
+            for(int i=0;i<24;i++)
             {
-                GridLine(new Vector3(i*12,-1,-72),new Vector3(i*12,-1,72));
-                GridLine(new Vector3(-72,-1,i*12),new Vector3(72,-1,i*12));
+                float angle=i*Mathf.PI*2/24;var direction=new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle));
+                GridLine(direction*(FleetRules.ArenaRadius-1)+Vector3.down,direction*(FleetRules.ArenaRadius+1)+Vector3.down);
             }
             audioSource=gameObject.AddComponent<AudioSource>(); audioSource.spatialBlend=0; audioSource.volume=.2f;
             explosionClip=FleetSound.Get("Explosion");
@@ -539,10 +539,12 @@ namespace FleetSurvival
         }
         void PositionCamera()
         { ViewCamera.transform.position=cameraFocus+new Vector3(0,.82f,-.57f).normalized*cameraDistance; ViewCamera.transform.LookAt(cameraFocus); }
+        public void FocusSector(Vector3 point)
+        {cameraFocus=Vector3.ClampMagnitude(new Vector3(point.x,0,point.z),FleetRules.ArenaRadius);PositionCamera();}
 
         IEnumerator SmokeTest()
         {
-            yield return null;
+            Begin(Faction.Republic);yield return null;yield return new WaitForEndOfFrame();
             Debug.Log("FLEET_DISPLAY "+Screen.fullScreenMode+" "+Screen.width+"x"+Screen.height+" desktop "+Screen.currentResolution.width+"x"+Screen.currentResolution.height);
             var assertions=new List<string>();
             try
@@ -585,6 +587,7 @@ namespace FleetSurvival
                 CheckLivingSector(assertions);
                 CheckTacticalReadouts(assertions);
                 CheckFleetLimits(assertions);
+                CheckSectorInterface(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -607,6 +610,8 @@ namespace FleetSurvival
             cameraFocus=new Vector3(8,0,10);cameraDistance=105;PositionCamera();Notify("TACTICAL READOUTS / actual unit stats, refit effects and final destination");
             yield return null;
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-tactical-preview.png"));
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-hud-16x10.png"),1280,800);
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-hud-ultrawide.png"),2100,900);
             Begin(Faction.Republic); Salvage=1000; LaunchWave();
             BeginReinforcementPlacement(ShipClass.Destroyer); UpdateReinforcementPreview(new Vector3(22,0,10));
             yield return null;
@@ -646,6 +651,9 @@ namespace FleetSurvival
             Notify("DERELICT WRECK / three large pieces slowly drifting apart");
             yield return new WaitForSecondsRealtime(.95f);
             HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-wreck-drift-preview.png"));
+            Begin(Faction.CIS);Salvage=1000;Notify("GEONOSIS ORBIT / Separatist fleet command");
+            yield return null;
+            HUD.CapturePreview(Path.Combine(Application.persistentDataPath,"fleet-hud-cis.png"),1280,800);
             yield return new WaitForSecondsRealtime(.3f);
             Application.Quit(0);
         }
@@ -795,6 +803,32 @@ namespace FleetSurvival
             }
         }
         static void Check(bool condition,string name,List<string> checks) { if(!condition) throw new Exception("Smoke test failed: "+name); checks.Add(name); }
+        void CheckSectorInterface(List<string> assertions)
+        {
+            Begin(Faction.Republic);HUD.RefreshText();Canvas.ForceUpdateCanvases();
+            var map=FindObjectOfType<FleetMinimap>();var rect=map.GetComponent<RectTransform>();
+            Vector3[] destinations=Ships.Select(s=>s.Destination).ToArray();int selected=SelectedCount;
+            var e=new PointerEventData(EventSystem.current){button=PointerEventData.InputButton.Left,position=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(new Vector3(40,25,0)))};
+            var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(e,hits);
+            Check(hits.Count>0 && hits[0].gameObject==map.gameObject,"Minimap receives clicks without a blocking overlay",assertions);
+            ExecuteEvents.Execute(map.gameObject,e,ExecuteEvents.pointerDownHandler);
+            Check(Vector3.Distance(cameraFocus,new Vector3(40/100f*FleetRules.ArenaRadius,0,25/73f*FleetRules.ArenaRadius))<.05f,"Minimap click centers camera on the chosen sector position",assertions);
+            e.position=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(new Vector3(-60,-30,0)));ExecuteEvents.Execute(map.gameObject,e,ExecuteEvents.dragHandler);
+            Check(cameraFocus.x<0 && cameraFocus.z<0 && SelectedCount==selected && Ships.Select(s=>s.Destination).SequenceEqual(destinations),"Minimap drag pans without changing selection or orders",assertions);
+            Vector3 hold=cameraFocus;e.button=PointerEventData.InputButton.Right;e.position=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(Vector3.zero));ExecuteEvents.Execute(map.gameObject,e,ExecuteEvents.pointerDownHandler);
+            Check(cameraFocus==hold,"Right-click on minimap does not pan or issue a fleet order",assertions);
+            TogglePause();e.button=PointerEventData.InputButton.Left;ExecuteEvents.Execute(map.gameObject,e,ExecuteEvents.pointerDownHandler);
+            hits.Clear();EventSystem.current.RaycastAll(e,hits);
+            Check(Paused && cameraFocus.magnitude<.05f && hits.Count>0 && hits[0].gameObject==map.gameObject,"Minimap remains usable for planning during tactical pause",assertions);TogglePause();
+            FocusSector(new Vector3(1000,4,1000));Check(Mathf.Abs(cameraFocus.magnitude-FleetRules.ArenaRadius)<.05f && cameraFocus.y==0,"Minimap panning stays within the sector",assertions);
+            bool guide=HUD.ControlsVisible;HUD.ToggleControls();Check(HUD.ControlsVisible!=guide,"Controls guide expands on demand",assertions);HUD.ToggleControls();FocusSector(Vector3.zero);
+            foreach(var button in FindObjectsOfType<UnityEngine.UI.Button>().Where(b=>b.transform.parent.name=="Fleet requisitions"))
+            {
+                var buttonRect=button.GetComponent<RectTransform>();e.position=RectTransformUtility.WorldToScreenPoint(null,buttonRect.TransformPoint(buttonRect.rect.center));hits.Clear();EventSystem.current.RaycastAll(e,hits);
+                Check(hits.Count>0 && hits[0].gameObject==button.gameObject,"Compact reinforcement card is not obscured: "+button.name,assertions);
+            }
+            Check(FindObjectOfType<FleetEnvironment>().LandmarkCount==2,"Orbital shipyards provide scenery without occupying fleet units",assertions);
+        }
         void CheckFleetLimits(List<string> assertions)
         {
             Begin(Faction.CIS);Salvage=10000;
