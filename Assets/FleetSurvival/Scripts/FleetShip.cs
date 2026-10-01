@@ -47,7 +47,7 @@ namespace FleetSurvival
             Stats=FleetRules.SquadronStats(faction,kind,Role);
             MaxHull=Stats.Hull*multiplier; MaxShield=Stats.Shield*multiplier;
             Hull=MaxHull; Shield=MaxShield; cooldown=Random.Range(.1f,.8f);
-            ShipVisuals.Build(transform,faction,kind);
+            ShipVisuals.Build(transform,faction,kind,Role);
             VisualRoot=transform.GetChild(0);
             Destruction=gameObject.AddComponent<ShipDestruction>(); Destruction.Initialize(this);
             if(kind==ShipClass.Fighter || kind==ShipClass.Interceptor) Squadron=new FleetSquadron(this);

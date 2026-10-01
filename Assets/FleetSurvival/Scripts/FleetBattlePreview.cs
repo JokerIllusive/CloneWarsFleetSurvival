@@ -23,6 +23,7 @@ namespace FleetSurvival
             BattleEffects.Tick(1);Check(BattleEffects.ActiveFlashes==0,"Battle flashes expire without lingering glows",assertions);
             ClearBattle();Check(BattleEffects.ActiveFlashes==0,"Restart clears pooled battle effects",assertions);
             var capital=Spawn(Faction.Republic,ShipClass.Frigate,true,false,Vector3.zero);
+            Check(capital.EngineEffects.JetCount==0,"Capital ships have no generic floating engine dots",assertions);
             capital.Shield=0;capital.Damage(capital.MaxHull+1);
             Check(wrecks.Last().GetComponentsInChildren<MeshRenderer>().All(r=>!r.name.StartsWith("Engine ")),"Dead capital husks retain no active engine glow",assertions);
         }

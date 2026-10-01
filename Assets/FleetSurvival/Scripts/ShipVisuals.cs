@@ -84,7 +84,7 @@ namespace FleetSurvival
             go.GetComponent<MeshFilter>().sharedMesh=mesh; go.GetComponent<Renderer>().sharedMaterial=Material(color);
         }
 
-        public static void Build(Transform root, Faction faction, ShipClass kind)
+        public static void Build(Transform root, Faction faction, ShipClass kind,SquadronRole role=SquadronRole.Fighter)
         {
             if(kind!=ShipClass.Fighter && kind!=ShipClass.Interceptor) { BuildSingle(root,faction,kind); return; }
             var group=new GameObject("Six-fighter squadron").transform; group.SetParent(root,false);
@@ -92,15 +92,16 @@ namespace FleetSurvival
             {
                 var craft=new GameObject("Squadron fighter").transform; craft.SetParent(group,false);
                 craft.localPosition=offset; craft.localScale=Vector3.one*FleetSquadron.CraftScale;
-                BuildSingle(craft,faction,kind);
+                BuildSingle(craft,faction,kind,role);
             }
         }
 
-        static void BuildSingle(Transform root, Faction faction, ShipClass kind)
+        static void BuildSingle(Transform root, Faction faction, ShipClass kind,SquadronRole role=SquadronRole.Fighter)
         {
             string assetName = faction==Faction.Republic
                 ? (kind==ShipClass.Flagship || kind==ShipClass.Destroyer || kind==ShipClass.Carrier ? "VenatorDetailed" : kind==ShipClass.Frigate ? "Acclamator" : kind==ShipClass.Escort ? "Arquitens" : kind==ShipClass.Interceptor ? "VWing" : "ARC170")
                 : (kind==ShipClass.Flagship ? "Providence" : kind==ShipClass.Frigate || kind==ShipClass.Escort ? "Munificent" : kind==ShipClass.Destroyer ? "Recusant" : kind==ShipClass.Carrier ? "Lucrehulk" : kind==ShipClass.Interceptor ? "TriFighter" : "Vulture");
+            if(kind==ShipClass.Fighter && role==SquadronRole.Strike)assetName=faction==Faction.Republic?"YWing":"Hyena";
             if(assetName!=null)
             {
                 var supplied=Resources.Load<GameObject>("Ships/"+assetName);

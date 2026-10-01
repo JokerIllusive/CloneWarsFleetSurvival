@@ -51,7 +51,7 @@ namespace FleetSurvival
         public static ShipStats SquadronStats(Faction faction,ShipClass kind,SquadronRole role)
         {
             var stats=Stats(faction,kind);
-            if(role==SquadronRole.Strike) {stats.Name=faction==Faction.Republic?"ARC-170 strike squadron":"Vulture strike squadron";stats.Damage*=2;stats.Interval=1.6f;stats.Range=22;stats.Speed=16;}
+            if(role==SquadronRole.Strike) {stats.Name=faction==Faction.Republic?"Y-wing bomber squadron":"Hyena bomber squadron";stats.Damage*=2;stats.Interval=1.6f;stats.Range=22;stats.Speed=16;}
             return stats;
         }
         public static int Capacity(Faction faction,ShipClass kind)

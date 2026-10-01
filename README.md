@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.8.2 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.2).
+[Download the Windows v0.8.3 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.3).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -20,9 +20,10 @@ Shields recharge after avoiding damage and refill between waves. Hulls require r
 Survive as long as possible; losing the command ship ends the run. Every fifth wave adds
 an enemy flagship, and later waves introduce destroyers and carriers.
 
-Battle effects include blue engine glows and speed-dependent exhaust wakes, banking
+Battle effects include fighter engine glows and speed-dependent exhaust wakes, banking
 fighter flybys, cannon muzzle flashes, colored laser wakes, blue shield impacts,
-and orange hull impacts with sparks. Engine positions are approximate in this pass.
+and orange hull impacts with sparks. Fighter engine positions are approximate in this pass.
+Capital ships use their model's engine textures without generic floating blue dots.
 Effects pause with the battle, and engine glows shut down when a ship is destroyed.
 
 ## Controls
@@ -185,13 +186,16 @@ and a new command updates only the commanded ships. They do not block selection.
 ## Ships
 
 - Republic: detailed Venator command ship, Venator destroyer/carrier, Acclamator,
-  Arquitens, ARC-170, and V-Wing interceptors.
+  Arquitens, ARC-170 fighters, V-Wing interceptors, and BTL-B Y-wing bombers.
 - CIS: Providence command ship, Munificent frigate/escort, Recusant,
-  Lucrehulk carrier, Vulture droid squadrons, and Tri-fighter interceptors.
+  Lucrehulk carrier, Vulture droid squadrons, Tri-fighter interceptors, and Hyena bombers.
 
 The first supplied Venator is preserved in the source project and model preview.
 The detailed second Venator is used in gameplay. Carrier hangars supplement the
 hyperspace reinforcement panel.
+The four playable CIS capital hulls now use the supplied Dread Naughts Star Wars
+model pack. Earlier source models remain in the project. The replacements retain
+their ship classes, stats, firing profiles, hangars, and fleet capacity costs.
 
 Fighter and interceptor units each contain six individual craft, selected and
 ordered as one squadron. Each craft has its own hull allocation and paired guns.
@@ -206,7 +210,7 @@ view; the ships use gameplay scale rather than literal kilometer-to-meter ratios
 
 Select a Venator or Lucrehulk carrier to open its hangar panel. Republic carriers
 have two squadron bays; CIS carriers have three. Command ships have one bay. Launch
-Fighter (55 salvage), Interceptor (45), or Strike (75) squadrons. Each contains six
+Fighter (55 salvage), Interceptor (45), or Bomber (75) squadrons. Each contains six
 craft and occupies one fleet capacity, even while launching or docked. Launching
 takes two seconds; the deck has a 12-second cooldown. Bays remain occupied by their
 deployed squads, so the same carrier cannot launch an unlimited fleet.
@@ -227,8 +231,9 @@ to capitals. Fighters screen the fleet, prefer hostile strike squads, and deal
 surviving craft, dealing 1.9x damage to capitals / .35x to craft. Capital guns deal
 .6x damage to squadrons. The unit panel shows baseline effective DPS; these target
 modifiers apply on firing. Explicit focus-fire orders override target preference.
-Strike loadouts use the supplied ARC-170 and Vulture models; dedicated bomber
-models are not included. Their refits still add 10% of their own base weapon damage
+Strike loadouts use BTL-B Y-wing models for the Republic and Hyena bomber models
+for the CIS. Ordinary ARC-170 and Vulture fighter squads remain available.
+Bomber refits still add 10% of their own base weapon damage
 per purchase and stop at +100%.
 
 Enemy carriers hold at standoff range, escorts screen carriers when threats are

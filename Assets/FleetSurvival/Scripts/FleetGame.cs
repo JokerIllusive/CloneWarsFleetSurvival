@@ -610,6 +610,7 @@ namespace FleetSurvival
                 CheckSectorInterface(assertions);
                 CheckCarriersAndTactics(assertions);
                 CheckBattleVisuals(assertions);
+                CheckBomberModels(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -700,6 +701,7 @@ namespace FleetSurvival
             }
             yield return new WaitForSecondsRealtime(.3f);
             yield return BattleVisualPreview();
+            yield return BomberFleetPreview();
             Application.Quit(0);
         }
         void CheckMovement(List<string> assertions)

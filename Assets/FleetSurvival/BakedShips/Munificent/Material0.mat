@@ -46,7 +46,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CullMode: 2
+    - _CullMode: 0
     - _DstBlend: 0
     - _Mode: 0
     - _SrcBlend: 1
@@ -54,13 +54,13 @@ Material:
     - alphaCutoff: 0.5
     - baseColorTexture_texCoord: 0
     - emissiveTexture_texCoord: 0
-    - metallicFactor: 1
+    - metallicFactor: 0.4860967
     - metallicRoughnessTexture_texCoord: 0
     - normalTexture_scale: 1
     - normalTexture_texCoord: 0
     - occlusionTexture_strength: 1
     - occlusionTexture_texCoord: 0
-    - roughnessFactor: 1
+    - roughnessFactor: 0.34
     m_Colors:
     - baseColorFactor: {r: 1, g: 1, b: 1, a: 1}
     - baseColorTexture_Rotation: {r: 0, g: 0, b: 0, a: 0}

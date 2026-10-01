@@ -197,15 +197,16 @@ namespace FleetSurvival.Editor
                     width=Mathf.Max(4,(int)(width*factor)); height=Mathf.Max(4,(int)(height*factor));
                     string texturePath=directory+"/Texture"+textures.Count+".asset";
                     var existing=AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-                    if(existing!=null) optimized=existing;
-                    else
                     {
                         bool srgb=UnityEngine.Experimental.Rendering.GraphicsFormatUtility.IsSRGBFormat(texture.graphicsFormat);
                         var target=RenderTexture.GetTemporary(width,height,0,RenderTextureFormat.ARGB32,srgb?RenderTextureReadWrite.sRGB:RenderTextureReadWrite.Linear);
                         var previous=RenderTexture.active; Graphics.Blit(texture,target); RenderTexture.active=target;
                         var resized=new Texture2D(width,height,TextureFormat.RGBA32,true,!srgb) {name=source.name+"_"+property,filterMode=FilterMode.Trilinear,anisoLevel=2,wrapMode=texture.wrapMode};
                         resized.ReadPixels(new Rect(0,0,width,height),0,0); resized.Apply(true); resized.Compress(true); resized.Apply(false,true);
-                        RenderTexture.active=previous; RenderTexture.ReleaseTemporary(target); AssetDatabase.CreateAsset(resized,texturePath); optimized=resized;
+                        RenderTexture.active=previous; RenderTexture.ReleaseTemporary(target);
+                        // Replacing a model must refresh pixels while keeping prefab asset references stable.
+                        if(existing==null){AssetDatabase.CreateAsset(resized,texturePath);optimized=resized;}
+                        else{EditorUtility.CopySerialized(resized,existing);EditorUtility.SetDirty(existing);UnityEngine.Object.DestroyImmediate(resized);optimized=existing;}
                     }
                     textures[texture]=optimized;
                 }

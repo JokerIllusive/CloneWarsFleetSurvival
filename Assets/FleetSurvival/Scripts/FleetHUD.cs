@@ -151,7 +151,7 @@ namespace FleetSurvival
             foreach(SquadronRole role in Enum.GetValues(typeof(SquadronRole)))
             {
                 var type=role;int index=(int)role;
-                string label=role==SquadronRole.Interceptor?"INTERCEPT":role.ToString().ToUpper();
+                string label=role==SquadronRole.Interceptor?"INTERCEPT":role==SquadronRole.Strike?"BOMBER":role.ToString().ToUpper();
                 hangarLaunch[index]=Button(panel,label+"\n"+FleetRules.LaunchCost(role)+" salvage",new Vector2(0,1),new Vector2(16+index*92,-113),new Vector2(84,55),()=>game.LaunchSelectedSquadron(type));var launchLabel=hangarLaunch[index].GetComponentInChildren<TextMeshProUGUI>();launchLabel.fontSize=13;launchLabel.rectTransform.sizeDelta=new Vector2(78,47);
             }
             recoverSquad=Button(panel,"RECOVER [BACKSPACE]",new Vector2(0,1),new Vector2(16,-180),new Vector2(268,34),()=>game.RecoverSelectedSquadron());recoverSquad.GetComponentInChildren<TextMeshProUGUI>().fontSize=14;

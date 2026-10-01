@@ -65,7 +65,7 @@ namespace FleetSurvival
         public FleetEngineEffects(FleetShip owner)
         {
             ship=owner;previousYaw=ship.transform.eulerAngles.y;
-            if(ship.Squadron!=null){for(int i=0;i<6;i++)Build(ship.VisualRoot.GetChild(i));}else Build(ship.VisualRoot);
+            if(ship.Squadron!=null)for(int i=0;i<6;i++)Build(ship.VisualRoot.GetChild(i));
         }
         void Build(Transform body)
         {

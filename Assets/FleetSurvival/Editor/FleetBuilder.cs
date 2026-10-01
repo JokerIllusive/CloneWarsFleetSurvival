@@ -7,7 +7,7 @@ using TMPro;
 
 namespace FleetSurvival.Editor
 {
-    public static class FleetBuilder
+    public static partial class FleetBuilder
     {
         public static void PreviewSuppliedModel()
         {
@@ -47,11 +47,8 @@ namespace FleetSurvival.Editor
 
         public static void PrepareSuppliedModel()
         {
-            PrepareModel("star_wars_the_clone_wars_munificent_s7_style.glb","Munificent",10);
             PrepareModel("republic_venator_star_destroyer.glb","Venator",17);
             PrepareModel("acclamator_class_star_destroyer.glb","Acclamator",10);
-            PrepareModel("star_wars_the_clone_wars_providence.glb","Providence",17);
-            PrepareModel("star_wars_the_clone_wars_recusant_s3e2_style.glb","Recusant",13);
             PrepareModel("v-19_torrent_-_star_wars_-_clone_wars.glb","V19Torrent",3.6f);
             PrepareModel("republic_v-wing_starfighter.glb","VWing",3.6f);
             PrepareModel("droid_tri_fighter.glb","TriFighter",3.5f);
@@ -59,7 +56,7 @@ namespace FleetSurvival.Editor
             PrepareModel("arc-170_starfighter.glb","ARC170",4.2f);
             PrepareModel("arquitens-class_light_cruiser.glb","Arquitens",8.5f);
             PrepareModel("venator_class_star_destroyer.glb","VenatorDetailed",17);
-            PrepareModel("star_wars_battlefront_2_cis_lucrehulk.glb","Lucrehulk",18);
+            PrepareBomberFleet();
         }
         public static void PreviewCompleteFleet()
         {
@@ -151,7 +148,7 @@ namespace FleetSurvival.Editor
             File.WriteAllBytes(Path.GetFullPath(Path.Combine(Application.dataPath,"../../Ship-forward-preview.png")),image.EncodeToPNG());
             RenderTexture.active=null; camera.targetTexture=null; target.Release(); UnityEngine.Object.DestroyImmediate(target); UnityEngine.Object.DestroyImmediate(image);
         }
-        static void PrepareModel(string file,string name,float length)
+        static void PrepareModel(string file,string name,float length,string hullNode=null)
         {
             string source="Assets/FleetSurvival/Models/"+file;
             var asset=AssetDatabase.LoadAssetAtPath<GameObject>(source);
@@ -159,13 +156,21 @@ namespace FleetSurvival.Editor
             Directory.CreateDirectory("Assets/FleetSurvival/Resources/Ships"); AssetDatabase.Refresh();
             var root=new GameObject(name);
             var model=UnityEngine.Object.Instantiate(asset,root.transform); model.name="Original textured model";
+            if(hullNode!=null)
+            {
+                bool found=false;
+                foreach(var node in model.GetComponentsInChildren<Transform>())if(node!=null && node.name.StartsWith("cis_") && node.name.Contains("_ARM_"))
+                {if(node.name==hullNode)found=true;else UnityEngine.Object.DestroyImmediate(node.gameObject);}
+                if(!found)throw new Exception("Missing hull in supplied fleet pack: "+hullNode);
+            }
+            var poseMeshes=FreezeSkinnedMeshes(model);
             var renderers=model.GetComponentsInChildren<Renderer>();
             Bounds bounds=renderers[0].bounds;
             foreach(var renderer in renderers) bounds.Encapsulate(renderer.bounds);
             if(bounds.size.x>bounds.size.z && bounds.size.x>bounds.size.y) model.transform.localRotation=Quaternion.Euler(0,90,0)*model.transform.localRotation;
             else if(bounds.size.y>bounds.size.z) model.transform.localRotation=Quaternion.Euler(90,0,0)*model.transform.localRotation;
             // These assets have different authored noses, including sideways fighter meshes.
-            float forwardYaw=name=="Venator" || name=="Lucrehulk"?180:name=="ARC170" || name=="V19Torrent"?270:0;
+            float forwardYaw=hullNode!=null?(name=="Munificent"?180:0):name=="Venator" || name=="Lucrehulk" || name=="Hyena"?180:name=="ARC170" || name=="V19Torrent"?270:0;
             model.transform.localRotation=Quaternion.Euler(0,forwardYaw,0)*model.transform.localRotation;
             bounds=renderers[0].bounds; foreach(var renderer in renderers) bounds.Encapsulate(renderer.bounds);
             Debug.Log("MODEL_READY "+name+" sourceBounds="+bounds+" renderers="+renderers.Length);
@@ -173,6 +178,7 @@ namespace FleetSurvival.Editor
             model.transform.localScale*=factor;
             model.transform.localPosition=-bounds.center*factor+Vector3.up*.6f;
             HullSectionBaker.Bake(root,name);
+            foreach(var mesh in poseMeshes) UnityEngine.Object.DestroyImmediate(mesh);
             PrefabUtility.SaveAsPrefabAsset(root,"Assets/FleetSurvival/Resources/Ships/"+name+".prefab");
             UnityEngine.Object.DestroyImmediate(root); AssetDatabase.SaveAssets();
         }

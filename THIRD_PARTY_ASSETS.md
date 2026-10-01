@@ -31,6 +31,49 @@ explosions use original synthesized audio created for this prototype.
 
 ## Ship models
 
+The playable Munificent, Providence, Recusant, and Lucrehulk hulls use the newer
+user-supplied model pack credited below. Earlier individual source files and their
+credits are preserved in this project.
+
+## Hyena Bomber
+
+Creator: Dakata_123 (https://sketchfab.com/Dakata_123)
+
+Source: https://sketchfab.com/3d-models/hyena-bomber-738ab8a1279740b48d88b960459c41a8
+
+License: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Changes: frozen in flight pose, scaled, centered, oriented, and baked into shared
+Unity hull sections and armor fragments; textures resized to at most 1024 pixels.
+Used for six-craft CIS bomber squadrons.
+
+## BTL-B Y-Wing
+
+Creator: A308 Digital (https://sketchfab.com/A308)
+
+Source: https://sketchfab.com/3d-models/btl-b-y-wing-102aab8967174476b264d69e979f9d70
+
+License: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Changes: scaled, centered, oriented, and baked into shared Unity hull sections and
+armor fragments; textures resized to at most 1024 pixels. Used for six-craft
+Republic bomber squadrons.
+
+## Dread Naughts Star Wars
+
+Creator: A.D.G.B Power (https://sketchfab.com/ADGB)
+
+Source: https://sketchfab.com/3d-models/dread-naughts-star-wars-e64b317968f8481c9abeceb0ce53e5b4
+
+License: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Changes: Munificent, Providence, Recusant, and Lucrehulk hulls separated from the
+combined file, frozen into static flight geometry, individually scaled, centered,
+oriented, and baked into shared Unity hull sections and armor fragments; textures
+resized to at most 1024 pixels. Used as replacements for the four CIS capital hulls.
+
+## Earlier individual ship sources
+
 **Star Wars: The Clone Wars Munificent (S7 Style)** by
 [lolqeeeeeeeeee](https://sketchfab.com/lolqeeeeeeeeee).
 
@@ -181,4 +224,3 @@ Source: https://sketchfab.com/3d-models/star-wars-battlefront-2-cis-lucrehulk-ab
 License: CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 Changes: scaled, centered, oriented, and imported into Unity; source geometry and textures retained.
-
