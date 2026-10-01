@@ -19,6 +19,7 @@ namespace FleetSurvival
         public bool Meltdown { get; private set; }
         public bool Complete { get; private set; }
         public float Radius => radius;
+        public float BlastRadius => radius*2.8f;
         public float Countdown => Mathf.Max(0,(Meltdown?2.6f:1.8f)-age);
         public int FragmentCount => fragments;
         public static FleetWreck Create(FleetGame owner,FleetShip source,bool meltdown)
@@ -48,7 +49,7 @@ namespace FleetSurvival
             core.SetActive(meltdown);
             if(meltdown)
             {
-                wreck.danger=ShipVisuals.Ring(root.transform,source.Stats.Radius*2.8f,new Color(.8f,.25f,.05f),.1f,"Reactor blast radius");
+                wreck.danger=ShipVisuals.Ring(root.transform,wreck.BlastRadius,new Color(.8f,.25f,.05f),.1f,"Reactor blast radius");
                 owner.Notify("REACTOR FAILURE: "+source.Stats.Name+" wreck. Move ships outside its orange blast ring.");
             }
             var drift=root.AddComponent<FleetDebris>();drift.Game=owner;drift.Lifetime=18;drift.Velocity=source.transform.forward*Mathf.Min(source.CurrentSpeed*.05f,.25f);drift.Spin=Vector3.up*.3f;
@@ -76,7 +77,7 @@ namespace FleetSurvival
             }
             if(Countdown>0) return;
             Complete=true;
-            if(Meltdown) { game.Burst(transform.position,radius*1.45f);game.ReactorBlast(transform.position,radius*2.8f,blastDamage); }
+            if(Meltdown) { game.Burst(transform.position,radius*1.45f);game.ReactorBlast(transform.position,BlastRadius,blastDamage); }
             else game.Burst(transform.position,radius*.55f);
             ReleaseFragments(transform.position,8);
             SplitHusk();

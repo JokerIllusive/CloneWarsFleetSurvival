@@ -15,6 +15,10 @@ namespace FleetSurvival
         Mesh box;
         public int LandmarkCount { get; private set; }
         public int AsteroidCount { get; private set; }
+        readonly List<Transform> mapAsteroids=new List<Transform>(),mapLandmarks=new List<Transform>();
+        public IReadOnlyList<Transform> MapAsteroids => mapAsteroids;
+        public IReadOnlyList<Transform> MapLandmarks => mapLandmarks;
+        public Vector3 PlanetPosition => planet.position;
         public void Initialize(FleetGame owner,Transform sector,Vector3 sunlight)
         {
             game=owner; transform.SetParent(sector,false);
@@ -82,6 +86,7 @@ namespace FleetSurvival
                 if(belt) rock.Angle=(i%2==0?2.1f:.1f)+(float)rng.NextDouble()*.9f;
                 root.localPosition=new Vector3(Mathf.Cos(rock.Angle)*rock.Radius,rock.Height,Mathf.Sin(rock.Angle)*rock.Radius*.72f);
                 root.localRotation=Quaternion.Euler(i*43,i*87,i*29);rocks.Add(rock);
+                mapAsteroids.Add(root);
                 AsteroidCount++;
             }
         }
@@ -97,6 +102,7 @@ namespace FleetSurvival
         {
             var yard=new GameObject("Abandoned orbital shipyard "+LandmarkCount).transform;
             yard.SetParent(transform,false);yard.localPosition=position;yard.localRotation=Quaternion.Euler(9,heading,-6);yard.localScale=Vector3.one*size;LandmarkCount++;
+            mapLandmarks.Add(yard);
             var hull=new List<CombineInstance>();var trim=new List<CombineInstance>();var lamps=new List<CombineInstance>();
             AddBox(hull,new Vector3(0,0,0),new Vector3(2.8f,2,19));
             AddBox(hull,new Vector3(0,2,-6),new Vector3(5,3.2f,4));

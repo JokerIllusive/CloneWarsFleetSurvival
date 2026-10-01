@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace FleetSurvival
 {
-    public sealed class FleetHUD : MonoBehaviour
+    public sealed partial class FleetHUD : MonoBehaviour
     {
         FleetGame game;
         Canvas canvas;
@@ -35,7 +35,7 @@ namespace FleetSurvival
         readonly Color ink=new Color(.87f,.93f,1), mutedText=new Color(.45f,.59f,.72f), cyan=new Color(.22f,.8f,1);
         readonly Color panelColor=new Color(.018f,.035f,.065f,.88f);
         float refresh;
-        sealed class Marker { public RectTransform World, Dot; public UnityEngine.UI.Image Hull, Shield; public TextMeshProUGUI Name; }
+        sealed class Marker { public RectTransform World, Dot, Route, Destination; public FleetMapIcon Icon, Arrival; public UnityEngine.UI.Image Hull, Shield; public TextMeshProUGUI Name; }
 
         public void Initialize(FleetGame owner)
         {
@@ -121,13 +121,8 @@ namespace FleetSurvival
             Text(tally,"Enemy capitals\nEnemy fighters\nFriendly capitals lost\nFriendly fighters lost",new Vector2(0,1),new Vector2(16,-43),new Vector2(183,90),16,ink);
             tallyWave=Text(tally,"0\n0\n0\n0",new Vector2(1,1),new Vector2(-67,-43),new Vector2(35,90),16,ink,TextAlignmentOptions.TopRight);
             tallyRun=Text(tally,"0\n0\n0\n0",new Vector2(1,1),new Vector2(-16,-43),new Vector2(40,90),16,cyan,TextAlignmentOptions.TopRight);
-            var map=Panel(screen,"Tactical map",new Vector2(1,1),new Vector2(-18,-88),new Vector2(238,232),panelColor);
-            Text(map,"GEONOSIS / ORBIT",new Vector2(0,1),new Vector2(14,-12),new Vector2(210,25),16,cyan);
-            mapDots=Panel(map,"Ship contacts",new Vector2(.5f,.5f),new Vector2(0,-4),new Vector2(210,158),new Color(.01f,.025f,.04f,.9f));
-            mapDots.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();mapDots.gameObject.AddComponent<FleetMinimap>().Initialize(this);
-            BuildMapGrid();
-            Text(map,"CLICK / DRAG TO PAN",new Vector2(.5f,0),new Vector2(0,8),new Vector2(210,20),13,mutedText,TextAlignmentOptions.Center);
-            var help=Panel(screen,"Controls",new Vector2(1,1),new Vector2(-18,-334),new Vector2(300,259),panelColor);controls=help.gameObject;
+            BuildTacticalMap(screen);
+            var help=Panel(screen,"Controls",new Vector2(1,1),new Vector2(-18,-432),new Vector2(300,259),panelColor);controls=help.gameObject;
             Text(help,"FLEET ORDERS [H / ?]",new Vector2(0,1),new Vector2(18,-15),new Vector2(264,28),17,cyan);
             Text(help,"Left click / drag: select ships\nShift: add to selection\nRight click: move / focus fire\nF then right click: attack-move\nWASD / middle drag: pan\nScroll: zoom     Q: flagship\nSpace / Esc: pause\n1 / 2 / 3: call reinforcements",new Vector2(0,1),new Vector2(18,-55),new Vector2(264,192),17,ink);controls.SetActive(false);
             BuildHangarPanel(screen);
@@ -145,7 +140,7 @@ namespace FleetSurvival
         }
         void BuildHangarPanel(Transform screen)
         {
-            var panel=Panel(screen,"Hangar operations",new Vector2(1,1),new Vector2(-18,-334),new Vector2(300,367),panelColor);hangarPanel=panel.gameObject;
+            var panel=Panel(screen,"Hangar operations",new Vector2(1,1),new Vector2(-18,-432),new Vector2(300,367),panelColor);hangarPanel=panel.gameObject;
             Text(panel,"HANGAR OPERATIONS",new Vector2(0,1),new Vector2(16,-12),new Vector2(268,24),16,cyan);
             hangarReadout=Text(panel,"",new Vector2(0,1),new Vector2(16,-44),new Vector2(268,62),15,ink);
             foreach(SquadronRole role in Enum.GetValues(typeof(SquadronRole)))
@@ -187,7 +182,7 @@ namespace FleetSurvival
         {
             if(game.Phase==BattlePhase.Menu || game.Phase==BattlePhase.Defeat) return;
             if(RectTransformUtility.ScreenPointToLocalPointInRectangle(mapDots,screenPosition,eventCamera,out var point))
-                game.FocusSector(new Vector3(point.x/100*FleetRules.ArenaRadius,0,point.y/73*FleetRules.ArenaRadius));
+                game.FocusSector(MapWorld(point));
         }
         RectTransform MapLine(string name,Color color)
         { return Panel(mapDots,name,new Vector2(.5f,.5f),Vector2.zero,new Vector2(1,1),color,false); }
@@ -196,15 +191,16 @@ namespace FleetSurvival
         void BuildMapGrid()
         {
             var dim=new Color(.08f,.18f,.23f,.75f);
-            for(int i=-2;i<=2;i++) {LineBetween(MapLine("Sector grid",dim),new Vector2(i*40,-73),new Vector2(i*40,73),1);LineBetween(MapLine("Sector grid",dim),new Vector2(-100,i*29.2f),new Vector2(100,i*29.2f),1);}
-            for(int i=0;i<40;i++) {float a=i*Mathf.PI*2/40,b=(i+1)*Mathf.PI*2/40;LineBetween(MapLine("Sector perimeter",new Color(.2f,.39f,.45f)),new Vector2(Mathf.Cos(a)*100,Mathf.Sin(a)*73),new Vector2(Mathf.Cos(b)*100,Mathf.Sin(b)*73),1);}
+            var extent=MapExtent;
+            for(int i=-2;i<=2;i++) {LineBetween(MapLine("Sector grid",dim),new Vector2(i*extent.x*.4f,-extent.y),new Vector2(i*extent.x*.4f,extent.y),1);LineBetween(MapLine("Sector grid",dim),new Vector2(-extent.x,i*extent.y*.4f),new Vector2(extent.x,i*extent.y*.4f),1);}
+            for(int i=0;i<48;i++) {float a=i*Mathf.PI*2/48,b=(i+1)*Mathf.PI*2/48;LineBetween(MapLine("Sector perimeter",new Color(.2f,.39f,.45f)),new Vector2(Mathf.Cos(a)*extent.x,Mathf.Sin(a)*extent.y),new Vector2(Mathf.Cos(b)*extent.x,Mathf.Sin(b)*extent.y),1);}
             for(int i=0;i<4;i++) viewEdges[i]=MapLine("Camera footprint",new Color(.68f,.76f,.8f,.7f));
         }
         void UpdateMapView()
         {
             var plane=new Plane(Vector3.up,Vector3.zero);var corners=new[]{Vector2.zero,Vector2.right,Vector2.one,Vector2.up};var points=new Vector2[4];
-            for(int i=0;i<4;i++) {var ray=game.ViewCamera.ViewportPointToRay(corners[i]);if(plane.Raycast(ray,out float distance)) {var p=ray.GetPoint(distance);points[i]=new Vector2(p.x/FleetRules.ArenaRadius*100,p.z/FleetRules.ArenaRadius*73);}}
-            for(int i=0;i<4;i++) LineBetween(viewEdges[i],points[i],points[(i+1)%4],1.4f);
+            for(int i=0;i<4;i++) {var ray=game.ViewCamera.ViewportPointToRay(corners[i]);if(plane.Raycast(ray,out float distance))points[i]=MapPoint(ray.GetPoint(distance));}
+            for(int i=0;i<4;i++) LineBetween(viewEdges[i],points[i],points[(i+1)%4],1.7f);
         }
         UnityEngine.UI.Image Bar(Transform parent,string name,Vector2 pos,Vector2 size,Color color)
         {
@@ -250,7 +246,7 @@ namespace FleetSurvival
             RefreshText();
         }
         public void SetMute(bool value) { muteLabel.text=value?"SOUND OFF":"SOUND ON"; }
-        public void CapturePreview(string path,int width=1600,int height=900)
+        public void CapturePreview(string path,int width=1600,int height=900,bool mapOnly=false)
         {
             RefreshText(); UpdateMarkers();
             var camera=game.ViewCamera; var previousMode=canvas.renderMode;
@@ -258,7 +254,14 @@ namespace FleetSurvival
             var target=new RenderTexture(width,height,24);
             camera.targetTexture=target; canvas.renderMode=RenderMode.ScreenSpaceCamera; canvas.worldCamera=camera; canvas.planeDistance=1;
             Canvas.ForceUpdateCanvases();RefreshText();UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(cardArea);UpdateMarkers();Canvas.ForceUpdateCanvases();camera.Render(); RenderTexture.active=target;
-            var texture=new Texture2D(width,height,TextureFormat.RGB24,false); texture.ReadPixels(new Rect(0,0,width,height),0,0); texture.Apply();
+            var capture=new Rect(0,0,width,height);
+            if(mapOnly)
+            {
+                var corners=new Vector3[4];((RectTransform)mapDots.parent).GetWorldCorners(corners);
+                Vector2 lower=RectTransformUtility.WorldToScreenPoint(camera,corners[0]),upper=RectTransformUtility.WorldToScreenPoint(camera,corners[2]);
+                capture=new Rect(Mathf.Floor(lower.x),Mathf.Floor(lower.y),Mathf.Ceil(upper.x-lower.x),Mathf.Ceil(upper.y-lower.y));
+            }
+            var texture=new Texture2D((int)capture.width,(int)capture.height,TextureFormat.RGB24,false); texture.ReadPixels(capture,0,0); texture.Apply();
             System.IO.File.WriteAllBytes(path,texture.EncodeToPNG());
             camera.targetTexture=previousTarget; RenderTexture.active=previousActive; canvas.renderMode=previousMode;
             target.Release(); Destroy(target); Destroy(texture);
@@ -320,8 +323,9 @@ namespace FleetSurvival
             foreach(var ship in markers.Keys.ToArray())
             {
                 if(ship!=null && ship.Alive && game.Ships.Contains(ship)) continue;
-                var old=markers[ship]; Destroy(old.World.gameObject); Destroy(old.Dot.gameObject); markers.Remove(ship);
+                var old=markers[ship]; old.Dot.gameObject.SetActive(false);old.Route.gameObject.SetActive(false);old.Destination.gameObject.SetActive(false);Destroy(old.World.gameObject);Destroy(old.Dot.gameObject);Destroy(old.Route.gameObject);Destroy(old.Destination.gameObject);markers.Remove(ship);
             }
+            RefreshMapExtras();
             if(game.Phase==BattlePhase.Menu || game.Phase==BattlePhase.Defeat) return;
             UpdateMapView();
             foreach(var ship in game.Ships)
@@ -332,15 +336,13 @@ namespace FleetSurvival
                     var holder=Rect(markersRoot,"Ship status",new Vector2(.5f,.5f),Vector2.zero,new Vector2(100,39)); marker=new Marker{World=holder};
                     marker.Name=Text(holder,"",new Vector2(.5f,1),Vector2.zero,new Vector2(220,24),15,ink,TextAlignmentOptions.Center);
                     marker.Hull=Bar(holder,"Hull",new Vector2(0,-27),new Vector2(100,4),ship.Friendly?new Color(.3f,.86f,.65f):new Color(1,.4f,.27f)); marker.Shield=Bar(holder,"Shields",new Vector2(0,-34),new Vector2(100,3),cyan);
-                    marker.Dot=Panel(mapDots,"Ship contact",new Vector2(.5f,.5f),Vector2.zero,Vector2.one*(ship.IsFlagship?9:5),ship.Friendly?cyan:new Color(1,.35f,.2f),false); markers[ship]=marker;
+                    BuildMapContact(ship,marker);markers[ship]=marker;
                 }
                 Vector3 screen=game.ViewCamera.WorldToScreenPoint(ship.transform.position+Vector3.up*(ship.Stats.Radius*.45f+1));
                 bool readout=ship.Selected || ship.IsFlagship || ship.Hull<ship.MaxHull-.1f || ship.Shield<ship.MaxShield-.1f;
                 bool visible=!ship.Docked && readout && screen.z>0 && screen.x>0 && screen.x<game.ViewCamera.pixelWidth && screen.y>0 && screen.y<game.ViewCamera.pixelHeight; marker.World.gameObject.SetActive(visible);
                 if(visible) { RectTransformUtility.ScreenPointToLocalPointInRectangle(root,screen,canvas.renderMode==RenderMode.ScreenSpaceOverlay?null:canvas.worldCamera,out var position); marker.World.anchoredPosition=position; marker.Name.text=ship.IsFlagship?"COMMAND":ship.Selected?ship.Stats.Name:""; Fill(marker.Hull,ship.Hull/ship.MaxHull); Fill(marker.Shield,ship.Shield/ship.MaxShield); }
-                marker.Dot.anchoredPosition=new Vector2(ship.transform.position.x/FleetRules.ArenaRadius*100,ship.transform.position.z/FleetRules.ArenaRadius*73);
-                marker.Dot.gameObject.SetActive(!ship.Docked);
-                marker.Dot.GetComponent<UnityEngine.UI.Image>().color=ship.Selected?Color.white:ship.Friendly?cyan:new Color(1,.35f,.2f);
+                UpdateMapContact(ship,marker);
             }
             foreach(var wreck in game.ActiveWrecks)
             {
@@ -350,6 +352,7 @@ namespace FleetSurvival
                 warning.gameObject.SetActive(screen.z>0);warning.text="REACTOR FAILURE\n"+wreck.Countdown.ToString("0.0")+"s";
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(root,screen,canvas.renderMode==RenderMode.ScreenSpaceOverlay?null:canvas.worldCamera,out var position);warning.rectTransform.anchoredPosition=position;
             }
+            RefreshMapReadout(Input.mousePosition,null);
         }
     }
 }

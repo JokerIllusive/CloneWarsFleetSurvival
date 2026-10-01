@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.8.3 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.3).
+[Download the Windows v0.8.4 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.4).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -56,8 +56,16 @@ reinforcement types, weapon refits, sound controls, and a tactical map.
 The command bar and reinforcement dock are compact, leaving more space for the
 battlefield. All six reinforcement cards fit in one row and retain their baseline
 ship stats. Repairs, refits, and wave launch sit together on the right. The controls
-guide opens on demand. The minimap includes a sector grid, boundary, and live camera
-footprint; selected units are white, allies blue, and enemies orange. Healthy
+guide opens on demand. The minimap includes a sector grid, boundary, live camera
+footprint, Geonosis orbital contours, the moving asteroid field, and two shipyard
+landmarks. Rocks and yards are scenery. Heading icons distinguish command ships,
+carriers, other capitals, fighters, interceptors, and bombers. Allies are blue and
+enemies orange; gold brackets mark selected ships. Selected movement orders show
+their actual formation destinations and routes. Purple arrival beacons show queued
+hyperspace reinforcements, while reactor warnings include their blast area. Hover
+over contacts for current hull and shields, or over arrivals and reactor hazards
+for countdowns. Left click and drag continue to pan the camera without changing
+selection or orders. Docked wings disappear from airborne contacts. Healthy
 unselected ships hide their world status bars; selected, damaged, and command ships
 keep their readouts.
 
@@ -265,8 +273,12 @@ the separated parts stop during tactical pause and clear when leaving the battle
 Five staggered secondary explosions shed smaller pieces without hiding half the
 hull. About 28% of capital wrecks suffer a reactor failure, showing a 2.6-second
 countdown and an orange danger ring before a larger detonation. The blast damages
-nearby ships on either side, with distance falloff, and can start further delayed
-ship destructions. Ships in hyperspace are immune. Ordinary wreck sequences end
+ships of either faction whose centers are inside or on the orange ring, including
+fighter squadrons. Damage falls from full strength at the reactor to 25% at the
+edge; shields absorb it first, with the remainder damaging hull and fighter craft.
+The world ring and minimap blast area use the same radius. Ships outside the ring,
+in hyperspace, or docked are protected. A fatal hit can start further delayed
+ship destructions. Ordinary wreck sequences end
 after 1.8 seconds; a wave clears after its pending wreck blasts finish. Tactical
 pause freezes countdowns, particles, and debris. Each wreck releases at most 18
 armor fragments. Fighter destruction remains a smaller, immediate breakup.

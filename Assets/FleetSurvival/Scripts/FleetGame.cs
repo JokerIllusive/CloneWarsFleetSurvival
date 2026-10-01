@@ -17,6 +17,7 @@ namespace FleetSurvival
         readonly List<FleetWreck> wrecks=new List<FleetWreck>();
         public int PendingWrecks => wrecks.Count;
         public IReadOnlyList<FleetWreck> ActiveWrecks => wrecks;
+        public IReadOnlyList<FleetJump> ActiveJumps => jumps;
         GameObject placementGhost;
         public ShipClass? SelectedReinforcement { get; private set; }
         public int IncomingCount => jumps.Count;
@@ -431,10 +432,12 @@ namespace FleetSurvival
         }
         public void ReactorBlast(Vector3 position,float radius,float damage)
         {
+            if(radius<=0 || damage<=0) return;
             foreach(var ship in Ships.ToArray()) if(ship!=null && ship.Targetable)
             {
-                float distance=Mathf.Max(0,Vector3.Distance(ship.transform.position,position)-ship.Stats.Radius*.35f);
-                if(distance<radius) ship.Damage(damage*(1-distance/radius),position);
+                // Use ship centers so the world and minimap danger rings match the damage boundary.
+                float distance=Vector3.Distance(ship.transform.position,position);
+                if(distance<=radius) ship.Damage(damage*Mathf.Lerp(1,.25f,distance/radius),position);
             }
         }
         public void Burst(Vector3 position,float radius)
@@ -611,6 +614,8 @@ namespace FleetSurvival
                 CheckCarriersAndTactics(assertions);
                 CheckBattleVisuals(assertions);
                 CheckBomberModels(assertions);
+                CheckDetailedMinimap(assertions);
+                CheckReactorDamage(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -702,6 +707,8 @@ namespace FleetSurvival
             yield return new WaitForSecondsRealtime(.3f);
             yield return BattleVisualPreview();
             yield return BomberFleetPreview();
+            yield return DetailedMinimapPreview();
+            yield return ReactorDamagePreview();
             Application.Quit(0);
         }
         void CheckMovement(List<string> assertions)
@@ -867,7 +874,7 @@ namespace FleetSurvival
             var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(e,hits);
             Check(hits.Count>0 && hits[0].gameObject==map.gameObject,"Minimap receives clicks without a blocking overlay",assertions);
             ExecuteEvents.Execute(map.gameObject,e,ExecuteEvents.pointerDownHandler);
-            Check(Vector3.Distance(cameraFocus,new Vector3(40/100f*FleetRules.ArenaRadius,0,25/73f*FleetRules.ArenaRadius))<.05f,"Minimap click centers camera on the chosen sector position",assertions);
+            Check(Vector3.Distance(cameraFocus,new Vector3(40/HUD.MapExtent.x*FleetRules.ArenaRadius,0,25/HUD.MapExtent.y*FleetRules.ArenaRadius))<.05f,"Minimap click centers camera on the chosen sector position",assertions);
             e.position=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(new Vector3(-60,-30,0)));ExecuteEvents.Execute(map.gameObject,e,ExecuteEvents.dragHandler);
             Check(cameraFocus.x<0 && cameraFocus.z<0 && SelectedCount==selected && Ships.Select(s=>s.Destination).SequenceEqual(destinations),"Minimap drag pans without changing selection or orders",assertions);
             Vector3 hold=cameraFocus;e.button=PointerEventData.InputButton.Right;e.position=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(Vector3.zero));ExecuteEvents.Execute(map.gameObject,e,ExecuteEvents.pointerDownHandler);
