@@ -22,6 +22,7 @@ namespace FleetSurvival
         public FleetSquadron Squadron { get; private set; }
         public SquadronRole Role { get; private set; }
         public FleetHangar Hangar { get; private set; }
+        public FleetEngineEffects EngineEffects { get; private set; }
         public FleetHangar HomeHangar { get; set; }
         public bool Docked { get; set; }
         public bool ReturningToHangar { get; set; }
@@ -52,6 +53,7 @@ namespace FleetSurvival
             if(kind==ShipClass.Fighter || kind==ShipClass.Interceptor) Squadron=new FleetSquadron(this);
             if(kind==ShipClass.Carrier || kind==ShipClass.Flagship) Hangar=new FleetHangar(this);
             Weapons=gameObject.AddComponent<FleetWeapons>(); Weapons.Initialize(this);
+            EngineEffects=new FleetEngineEffects(this);
             if(friendly) { MovePreview=gameObject.AddComponent<FleetMovePreview>();MovePreview.Initialize(this); }
             var collider=gameObject.AddComponent<SphereCollider>(); collider.radius=Stats.Radius;
             SelectionRing=ShipVisuals.Ring(transform,Stats.Radius+1,FleetRules.Color(faction),.1f);
@@ -65,6 +67,7 @@ namespace FleetSurvival
         public void Tick(float dt)
         {
             if(!Alive) return;
+            EngineEffects.Tick(dt);
             if(Hangar!=null) Hangar.Tick(dt);
             if(Docked) return;
             if(hangarLaunch>0)
@@ -106,8 +109,9 @@ namespace FleetSurvival
                 if(!inRange && (!Friendly || ForcedTarget!=null || distance<Stats.Range+16)) move=true;
                 if((Kind==ShipClass.Fighter || Kind==ShipClass.Interceptor) && inRange)
                 {
-                    Vector3 radial=(transform.position-target.transform.position).normalized;
-                    desired=target.transform.position+radial*Stats.Range*.62f+Vector3.Cross(Vector3.up,radial)*4;
+                    Vector3 radial=transform.position-target.transform.position;radial.y=0;if(radial.sqrMagnitude<.01f)radial=-target.transform.forward;radial.Normalize();
+                    float clearance=Mathf.Min(Stats.Range*.9f,target.Stats.Radius+Stats.Radius+1.5f);
+                    desired=target.transform.position+radial*clearance+Vector3.Cross(Vector3.up,radial)*7;
                     move=true;
                 }
             }
@@ -190,10 +194,13 @@ namespace FleetSurvival
             float travel=(Torpedo?52:95)*dt;
             if(direction.magnitude<=travel+Target.Stats.Radius*.35f)
             {
+                var impact=Target.transform.position+new Vector3(direction.normalized.x*-Target.Stats.Radius*.45f,Target.Squadron!=null?.8f:2,direction.normalized.z*-Target.Stats.Radius*.45f);
+                bool shielded=Target.Shield>0;Game.BattleEffects.Pulse(impact,shielded?new Color(.22f,.65f,1):new Color(1,.38f,.06f),Torpedo?3.3f:shielded?1.5f:2,.23f,!shielded);
                 Target.Damage(Damage,transform.position); Game.RemoveBolt(this); return;
             }
             transform.rotation=Quaternion.LookRotation(direction);
             transform.position+=direction.normalized*travel;
+            var wake=GetComponent<LineRenderer>();if(wake!=null){wake.SetPosition(0,transform.position);wake.SetPosition(1,transform.position-direction.normalized*3.2f);}
         }
     }
 }

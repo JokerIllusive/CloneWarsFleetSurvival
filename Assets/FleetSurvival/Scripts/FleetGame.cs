@@ -69,6 +69,7 @@ namespace FleetSurvival
         readonly List<AudioSource> soundVoices=new List<AudioSource>();
         int nextVoice;
         bool muted;
+        public FleetBattleEffects BattleEffects { get; private set; }
 
         void Awake()
         {
@@ -80,6 +81,7 @@ namespace FleetSurvival
             BestWave=PlayerPrefs.GetInt("FleetSurvival.BestWave",0);
             SmokeMode=Environment.GetCommandLineArgs().Contains("-fleet-smoke-test");
             BuildWorld();
+            BattleEffects=new FleetBattleEffects(this);
             HUD=gameObject.AddComponent<FleetHUD>(); HUD.Initialize(this);
             SpawnDisplayFleet();
         }
@@ -180,6 +182,7 @@ namespace FleetSurvival
             wrecks.Clear();
             foreach(var voice in soundVoices) voice.Stop();
             foreach(Transform effect in effectsRoot) Destroy(effect.gameObject);
+            BattleEffects.Clear();
             gesture=false; IsDragging=false; AttackMoveMode=false;
         }
 
@@ -323,6 +326,7 @@ namespace FleetSurvival
         public void Tick(float dt)
         {
             if(Paused) return;
+            BattleEffects.Tick(dt);
             TickWrecks(dt);
             if(Phase!=BattlePhase.Combat && Phase!=BattlePhase.Preparation) return;
             for(int i=jumps.Count-1;i>=0;i--) if(!jumps[i].Tick(dt)) jumps.RemoveAt(i);
@@ -383,8 +387,10 @@ namespace FleetSurvival
             go.transform.position=muzzle;
             go.transform.localScale=torpedo?new Vector3(.24f,.24f,.85f):new Vector3(.14f,.14f,from.Kind==ShipClass.Fighter?1.3f:2.8f);
             go.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(color,true);
+            BattleEffects.Pulse(muzzle,color,from.Squadron!=null?.7f:1.8f,.12f);
             var core=GameObject.CreatePrimitive(PrimitiveType.Cube); Destroy(core.GetComponent<Collider>()); core.transform.SetParent(go.transform,false); core.transform.localScale=new Vector3(.4f,.4f,1.01f); core.GetComponent<Renderer>().sharedMaterial=ShipVisuals.Material(Color.white,true);
             if(torpedo) {var trail=go.AddComponent<TrailRenderer>();trail.time=.24f;trail.startWidth=.2f;trail.endWidth=0;trail.sharedMaterial=ShipVisuals.Material(color,true);trail.minVertexDistance=.25f;}
+            else {var wake=go.AddComponent<LineRenderer>();wake.useWorldSpace=true;wake.positionCount=2;wake.startWidth=.24f;wake.endWidth=.03f;wake.sharedMaterial=Resources.Load<Material>("FleetParticle");wake.startColor=new Color(color.r,color.g,color.b,.7f);wake.endColor=new Color(color.r,color.g,color.b,0);wake.SetPositions(new[]{muzzle,muzzle});}
             var bolt=go.AddComponent<FleetBolt>(); bolt.Game=this; bolt.Target=target; bolt.Damage=damage;bolt.Torpedo=torpedo; Bolts.Add(bolt);
         }
         public void PlayBattleSound(AudioClip clip,Vector3 position,float volume)
@@ -402,6 +408,7 @@ namespace FleetSurvival
         public void ShipDestroyed(FleetShip ship,bool? reactorOverride=null)
         {
             if(!Ships.Contains(ship)) return;
+            ship.EngineEffects.Shutdown();
             if(ship.Hangar!=null) ship.Hangar.CarrierLost();
             if(ship.Squadron==null) { RunTally.Record(ship.Friendly,false);WaveTally.Record(ship.Friendly,false); }
             if(ship.Squadron!=null) { ship.Destruction.BreakApart();Burst(ship.transform.position,ship.Stats.Radius*.35f); }
@@ -602,6 +609,7 @@ namespace FleetSurvival
                 CheckFleetLimits(assertions);
                 CheckSectorInterface(assertions);
                 CheckCarriersAndTactics(assertions);
+                CheckBattleVisuals(assertions);
                 ReturnToMenu(); Check(Phase==BattlePhase.Menu,"Return to faction menu",assertions);
                 File.WriteAllText(Path.Combine(Application.persistentDataPath,"fleet-smoke-test.json"),JsonUtility.ToJson(new SmokeReport{passed=true,checks=assertions.ToArray()},true));
                 Debug.Log("FLEET_SMOKE_PASS "+assertions.Count+" assertions");
@@ -691,6 +699,7 @@ namespace FleetSurvival
                 HUD.CapturePreview(Path.Combine(Application.persistentDataPath,faction==Faction.Republic?"fleet-vwing-preview.png":"fleet-trifighter-preview.png"));
             }
             yield return new WaitForSecondsRealtime(.3f);
+            yield return BattleVisualPreview();
             Application.Quit(0);
         }
         void CheckMovement(List<string> assertions)

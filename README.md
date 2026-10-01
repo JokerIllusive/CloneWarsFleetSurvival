@@ -4,7 +4,7 @@ A free, single-player Windows fleet-command survival prototype for Unity 2022.3.
 
 ## Play
 
-[Download the Windows v0.8.1 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.1).
+[Download the Windows v0.8.2 prototype](https://github.com/JokerIllusive/CloneWarsFleetSurvival/releases/tag/v0.8.2).
 Under Assets, download `CloneWarsFleetSurvival-Windows.zip`, extract all files, and
 run `CloneWarsFleetSurvival.exe`. Keep its `_Data` directory, `UnityPlayer.dll`, and
 `MonoBleedingEdge` together. Unity is not required to play.
@@ -19,6 +19,11 @@ reinforcements, and launch a wave. Destroyed enemies and cleared waves grant sal
 Shields recharge after avoiding damage and refill between waves. Hulls require repairs.
 Survive as long as possible; losing the command ship ends the run. Every fifth wave adds
 an enemy flagship, and later waves introduce destroyers and carriers.
+
+Battle effects include blue engine glows and speed-dependent exhaust wakes, banking
+fighter flybys, cannon muzzle flashes, colored laser wakes, blue shield impacts,
+and orange hull impacts with sparks. Engine positions are approximate in this pass.
+Effects pause with the battle, and engine glows shut down when a ship is destroyed.
 
 ## Controls
 

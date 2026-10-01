@@ -122,7 +122,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &602313391
+--- !u!1 &1269379082
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,8 +130,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 602313393}
-  - component: {fileID: 602313392}
+  - component: {fileID: 1269379084}
+  - component: {fileID: 1269379083}
   m_Layer: 0
   m_Name: Fleet Survival
   m_TagString: Untagged
@@ -139,25 +139,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &602313392
+--- !u!114 &1269379083
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 602313391}
+  m_GameObject: {fileID: 1269379082}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b74f9fb43aa8d8f46bab570aa0296208, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!4 &602313393
+--- !u!4 &1269379084
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 602313391}
+  m_GameObject: {fileID: 1269379082}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -170,4 +170,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 602313393}
+  - {fileID: 1269379084}
